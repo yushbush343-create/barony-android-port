@@ -13697,6 +13697,61 @@ failed:
 
 	constexpr int num_classes = sizeof(classes_in_order) / sizeof(classes_in_order[0]);
 
+static std::string customClassDisplayName(int classId)
+{
+        const CustomClass* customClass = CustomClassManager::getClass(classId);
+        if ( customClass )
+        {
+                return customClass->displayName;
+        }
+
+        return "";
+}
+
+static int classIdFromButtonName(const char* name)
+{
+        if ( !name )
+        {
+                return -1;
+        }
+
+        for ( int c = CLASS_BARBARIAN; c <= CLASS_PALADIN; ++c )
+        {
+                if ( strcmp(name, classes_in_order[c]) == 0 )
+                {
+                        return c;
+                }
+        }
+
+        const auto& customClasses = CustomClassManager::getClasses();
+        for ( size_t i = 0; i < customClasses.size(); ++i )
+        {
+                if ( customClasses[i].internalName == name )
+                {
+                        return NUMCLASSES + static_cast<int>(i);
+                }
+        }
+
+        return -1;
+}
+
+static const char* classButtonName(int classId)
+{
+        if ( classId >= CLASS_BARBARIAN && classId < NUMCLASSES )
+        {
+                return classes_in_order[classId];
+        }
+
+        const CustomClass* customClass = CustomClassManager::getClass(classId);
+        if ( customClass )
+        {
+                return customClass->internalName.c_str();
+        }
+
+        return "";
+}
+
+
     constexpr Uint32 color_dlc0 = makeColorRGB(169, 185, 212);
     constexpr Uint32 color_dlc1 = makeColorRGB(241, 129, 78);
     constexpr Uint32 color_dlc2 = makeColorRGB(255, 53, 206);
@@ -13704,15 +13759,22 @@ failed:
 	constexpr Uint32 color_pro = makeColorRGB(88, 203, 255);
 	constexpr Uint32 color_con = makeColorRGB(255, 56, 56);
 	constexpr Uint32 color_energy = makeColorRGB(21, 255, 0);
-	constexpr Uint32 color_heat = makeColorRGB(241, 129, 78);
+	constexpr Uint32 color_heat = makeColorRGB(241, 129, 78);\1
+                std::vector<const char*> result;
+                const auto& customClasses = CustomClassManager::getClasses();
+                result.reserve(num_classes + customClasses.size());
 
-	std::vector<const char*> reducedClassList(int index) {
-		std::vector<const char*> result;
-		result.reserve(num_classes);
-		for (int c = CLASS_BARBARIAN; c <= CLASS_PALADIN; ++c) {
-			if (isCharacterValidFromDLC(*stats[index], c) == VALID_OK_CHARACTER) {
-				result.emplace_back(classes_in_order[c]);
-			}
+                for (int c = CLASS_BARBARIAN; c <= CLASS_PALADIN; ++c) {
+                        if (isCharacterValidFromDLC(*stats[index], c) == VALID_OK_CHARACTER) {
+                                result.emplace_back(classes_in_order[c]);
+                        }
+                }
+
+                for (const auto& customClass : customClasses) {
+                        result.emplace_back(customClass.internalName.c_str());
+                }
+
+                return result;\2
 		}
 		return result;
 	}
@@ -17210,17 +17272,16 @@ failed:
 
             auto reduced_class_list = reducedClassList(index);
             auto random_class = reduced_class_list[RNG.uniform(0, (int)reduced_class_list.size() - 1)];
-            for (int c = 0; c < num_classes; ++c) {
-               if (strcmp(random_class, classes_in_order[c]) == 0) {
-                   client_classes[index] = c;
-                   break;
-               }
+            const int random_class_id = classIdFromButtonName(random_class);
+            if ( random_class_id >= 0 )
+            {
+                client_classes[index] = random_class_id;
             }
             if (inputs.hasController(index)) {
                 auto frame = static_cast<Frame*>(button.getParent());
                 auto subframe = frame->findFrame("subframe"); assert(subframe);
                 for (auto button : subframe->getButtons()) {
-                    if (strcmp(button->getName(), classes_in_order[client_classes[index]]) == 0) {
+                    if (strcmp(button->getName(), classButtonName(client_classes[index])) == 0) {
                         button->select();
                         break;
                     }
@@ -17233,8 +17294,8 @@ failed:
             saveLastCharacter(index, multiplayer);
         });
 
-		const int current_class = std::min(std::max(0, client_classes[index]), num_classes - 1);
-		auto current_class_name = classes_in_order[current_class];
+		const int current_class = std::max(0, client_classes[index]);
+                const char* current_class_name = classButtonName(current_class);
 
         bool selected_button = false;
 		static const std::string prefix = "*images/ui/Main Menus/Play/PlayerCreation/ClassSelection/";
@@ -17512,6 +17573,116 @@ failed:
 				}
 			    });
 		}
+
+        // CUSTOM CLASS BUTTONS
+        const auto& customClasses = CustomClassManager::getClasses();
+
+        for (size_t customIndex = 0; customIndex < customClasses.size(); ++customIndex)
+        {
+                const int classId = NUMCLASSES + static_cast<int>(customIndex);
+                const auto& customClass = customClasses[customIndex];
+                const char* name = customClass.internalName.c_str();
+
+                auto button = subframe->addButton(name);
+
+                button->setBackground(
+                        (prefix + "ClassSelect_IconBGBase_00.png").c_str());
+                button->setBackgroundHighlighted(
+                        (prefix + "ClassSelect_IconBGBaseHigh_00.png").c_str());
+                button->setBackgroundActivated(
+                        (prefix + "ClassSelect_IconBGBasePress_00.png").c_str());
+
+                button->setIcon(
+                        (prefix + "ClassSelect_Barbarian_00.png").c_str());
+
+                button->setColor(makeColor(255, 255, 255, 255));
+                button->setHighlightColor(makeColor(255, 255, 255, 255));
+
+                const int c = num_classes + static_cast<int>(customIndex);
+
+                button->setSize(SDL_Rect{
+                        8 + (c % 4) * 54,
+                        6 + (c / 4) * 54,
+                        54,
+                        54
+                });
+
+                if (client_classes[index] == classId)
+                {
+                        button->select();
+                        button->scrollParent();
+                        selected_button = true;
+                }
+
+                button->setWidgetSearchParent(
+                        ((std::string("card") + std::to_string(index)).c_str()));
+
+                button->addWidgetAction("MenuStart", "confirm");
+                button->addWidgetAction("MenuPageRightAlt", "chat");
+                button->addWidgetAction("MenuPageLeftAlt", "privacy");
+                button->addWidgetAction("MenuAlt1", "randomize_class");
+                button->addWidgetAction("MenuAlt2", "class_info");
+                button->setWidgetBack("back_button");
+
+                button->setCallback([](Button& button) {
+                        const int player = button.getOwner();
+                        const int classId =
+                                classIdFromButtonName(button.getName());
+
+                        if (!CustomClassManager::isCustomClassId(classId))
+                        {
+                                return;
+                        }
+
+                        soundActivate();
+                        client_classes[player] = classId;
+
+                        stats[player]->clearStats();
+                        initClass(player);
+                        sendPlayerOverNet();
+                        saveLastCharacter(player, multiplayer);
+                });
+
+                button->setTickCallback([](Widget& widget) {
+                        auto button = static_cast<Button*>(&widget);
+                        const int player = widget.getOwner();
+
+                        const int classId =
+                                classIdFromButtonName(button->getName());
+
+                        if (!CustomClassManager::isCustomClassId(classId))
+                        {
+                                return;
+                        }
+
+                        if (button->isSelected())
+                        {
+                                class_selection[player] = classId;
+
+                                if (inputs.hasController(player)
+                                        && client_classes[player] != classId)
+                                {
+                                        client_classes[player] = classId;
+                                        stats[player]->clearStats();
+                                        initClass(player);
+                                }
+                        }
+
+                        if (!main_menu_frame)
+                        {
+                                return;
+                        }
+
+                        auto selectedWidget =
+                                main_menu_frame->findSelectedWidget(player);
+
+                        if (!selectedWidget)
+                        {
+                                widget.select();
+                        }
+                });
+
+        }
 
         if (!selected_button) {
 		    auto first_button = subframe->findButton(reduced_class_list[0]);
@@ -18134,18 +18305,41 @@ failed:
 		auto class_text = card->addField("class_text", 64);
 		class_text->setSize(SDL_Rect{96, 236, 138, 32});
 		static auto class_text_fn = [](Field& field, int index){
-			int i = std::min(std::max(0, client_classes[index]), num_classes - 1);
-            field.setText(Language::get(playerClassLangEntryCapitalized(i)));
-		};
+                        const int classId = std::max(0, client_classes[index]);
+
+                        const CustomClass* customClass = CustomClassManager::getClass(classId);
+                        if ( customClass )
+                        {
+                                field.setText(customClass->displayName);
+                        }
+                        else
+                        {
+                                const int i = std::min(classId, num_classes - 1);
+                                field.setText(Language::get(playerClassLangEntryCapitalized(i)));
+                        }
+                };
 		class_text->setFont(smallfont_outline);
 		class_text->setJustify(Field::justify_t::CENTER);
 		class_text->setTickCallback([](Widget& widget){class_text_fn(*static_cast<Field*>(&widget), widget.getOwner());});
 		(*class_text->getTickCallback())(*class_text);
 
 		static auto class_button_tick_fn = [](Button& button, int index) {
-			int i = std::min(std::max(0, client_classes[index]), num_classes - 1);
-			auto find = classes.find(classes_in_order[i]);
-			if (find != classes.end()) {
+                        const int classId = std::max(0, client_classes[index]);
+
+                        // Custom classes use temporary base-game visuals.
+                        const CustomClass* customClass = CustomClassManager::getClass(classId);
+                        if ( customClass )
+                        {
+                                button.setBackground("*images/ui/Main Menus/Play/PlayerCreation/ClassSelection/ClassSelect_IconBGBase_00.png");
+                                button.setBackgroundHighlighted("*images/ui/Main Menus/Play/PlayerCreation/ClassSelection/ClassSelect_IconBGBaseHigh_00.png");
+                                button.setBackgroundActivated("*images/ui/Main Menus/Play/PlayerCreation/ClassSelection/ClassSelect_IconBGBasePress_00.png");
+                                button.setIcon("*images/ui/Main Menus/Play/PlayerCreation/ClassSelection/ClassSelect_Barbarian_00.png");
+                                return;
+                        }
+
+                        const int i = std::min(classId, num_classes - 1);
+                        auto find = classes.find(classes_in_order[i]);
+                        if (find != classes.end()) {
 				auto& class_info = find->second;
 				switch (class_info.dlc) {
 				case DLC::Base:

@@ -124,7 +124,7 @@ android {
     ndkVersion = "28.1.13356709"
 
     defaultConfig {
-        applicationId = "com.zhdan.baronyport"
+        applicationId = "com.zhdan.baronyport.mod"
         minSdk = 26
         targetSdk = 36
         versionCode = baronyVersionCode

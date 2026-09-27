@@ -1,3 +1,4 @@
+#include "custom_classes.hpp"
 /*-------------------------------------------------------------------------------
 
 	BARONY
@@ -33,6 +34,40 @@ void initClassStats(const int classnum, void* myStats)
 {
 	if ( !myStats ) { return; }
 	Stat* stat = static_cast<Stat*>(myStats);
+	// CUSTOM CLASSES
+	// Custom class IDs start at NUMCLASSES and use
+	// the same additive stat model as the built-in classes.
+	if ( CustomClassManager::isCustomClassId(classnum) )
+	{
+	        const CustomClass* customClass = CustomClassManager::getClass(classnum);
+
+	        if ( customClass )
+	        {
+	                stat->STR += customClass->STR;
+	                stat->DEX += customClass->DEX;
+	                stat->CON += customClass->CON;
+	                stat->INT += customClass->INT;
+	                stat->PER += customClass->PER;
+	                stat->CHR += customClass->CHR;
+
+	                stat->MAXHP += customClass->maxHP;
+	                stat->HP += customClass->maxHP;
+	                stat->MAXMP += customClass->maxMP;
+	                stat->MP += customClass->maxMP;
+
+	                for ( size_t i = 0; i + 1 < customClass->proficiencies.size(); i += 2 )
+	                {
+	                        const int proficiency = customClass->proficiencies[i];
+	                        const int value = customClass->proficiencies[i + 1];
+
+	                        if ( proficiency >= 0 && proficiency < NUMPROFICIENCIES )
+	                        {
+	                                stat->setProficiency(proficiency, value);
+	                        }
+	                }
+	        }
+	}
+
 	// CLASS LOADOUTS
 	// barbarian
 	if ( classnum == CLASS_BARBARIAN )
@@ -727,8 +762,37 @@ void initClass(const int player)
 
 
 	// CLASS LOADOUTS
+	// CUSTOM CLASS LOADOUTS
+	if ( CustomClassManager::isCustomClassId(client_classes[player]) )
+	{
+		const CustomClass* customClass = CustomClassManager::getClass(client_classes[player]);
+
+		if ( !isLocalPlayer && multiplayer == CLIENT && intro == false )
+		{
+			// Don't create starting items for remote players we don't own.
+			return;
+		}
+
+		if ( customClass )
+		{
+			initClassStats(client_classes[player], stats[player]);
+
+			if ( isLocalPlayer )
+			{
+				for ( const int itemType : customClass->startingItems )
+				{
+					if ( itemType >= 0 && itemType < NUMITEMS )
+					{
+						item = newItem(static_cast<ItemType>(itemType), SERVICABLE, 0, 1, 0, true, nullptr);
+						item2 = itemPickup(player, item);
+						free(item);
+					}
+				}
+			}
+		}
+	}
 	// barbarian
-	if ( client_classes[player] == CLASS_BARBARIAN )
+	else if ( client_classes[player] == CLASS_BARBARIAN )
 	{
 		initClassStats(client_classes[player], stats[player]);
 
@@ -3481,6 +3545,16 @@ void initClass(const int player)
 	}
 	if ( isLocalPlayer )
 	{
+		// CUSTOM CLASS STARTING SPELLS
+		const CustomClass* customClass = CustomClassManager::getClass(client_classes[player]);
+		if ( customClass )
+		{
+			for ( const int spellID : customClass->startingSpells )
+			{
+				addSpell(spellID, player, true);
+			}
+		}
+
 		if ( stats[player]->playerRace == RACE_VAMPIRE && stats[player]->stat_appearance == 0 )
 		{
 			addSpell(SPELL_LEVITATION, player, true);

@@ -1,3 +1,4 @@
+#include "custom_classes.hpp"
 /*-------------------------------------------------------------------------------
 
 	BARONY
@@ -87,6 +88,7 @@ void initGameDatafiles(bool moddedReload)
 	ClassHotbarConfig_t::init();
 	MainMenu::RaceDescriptions::readFromFile();
 	MainMenu::ClassDescriptions::readFromFile();
+     CustomClassManager::init();
 	StatueManager.readAllStatues();
 	GameModeManager_t::CurrentSession_t::SeededRun_t::readSeedNamesFromFile();
 	loadLights();
