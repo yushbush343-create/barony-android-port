@@ -33,7 +33,6 @@ classes with IDs 0–14; use an unused ID when adding another class.
       "CHR": 1,
       "proficiencies": [],
       "starting_spells": [],
-      "starting_items": []
     }
   ]
 }
