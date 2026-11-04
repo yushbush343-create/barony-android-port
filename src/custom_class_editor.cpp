@@ -567,6 +567,19 @@ namespace
             return;
         }
 
+        // Creating a new class must not silently replace an existing ID.
+        if ( selectedCustomId < 0 && findCustomClass(customClass.id) )
+        {
+            setStatus("That class ID is already in use. Choose another ID.");
+            return;
+        }
+
+        if ( selectedCustomId >= 0 && customClass.id != selectedCustomId )
+        {
+            setStatus("Existing class IDs cannot be changed.");
+            return;
+        }
+
         if ( !parseIntegerList(fieldText(fields.allowedRaces), customClass.allowedRaces)
             || !parseIntegerList(fieldText(fields.proficiencies), customClass.proficiencies)
             || !parseIntegerList(fieldText(fields.startingSpells), customClass.startingSpells)
