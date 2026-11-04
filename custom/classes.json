@@ -1,24 +1,23 @@
 {
-    "version": 1,
-    "classes": [
-        {
-            "internal_name": "test_class",
-            "display_name": "Test Class",
-            "max_hp": 20,
-            "max_mp": 15,
-            "STR": 2,
-            "DEX": 1,
-            "CON": 2,
-            "INT": 3,
-            "PER": 1,
-            "CHR": 2,
-            "proficiencies": [],
-            "starting_spells": [
-                4
-            ],
-            "starting_items": [
-                0
-            ]
-        }
-    ]
+  "version": 2,
+  "classes": [
+    {
+      "id": 0,
+      "internal_name": "test_class",
+      "display_name": "Test Class",
+      "description": "A test class used to verify custom class loading and character selection.",
+      "allowed_races": [0],
+      "max_hp": 20,
+      "max_mp": 15,
+      "STR": 2,
+      "DEX": 1,
+      "CON": 2,
+      "INT": 3,
+      "PER": 1,
+      "CHR": 2,
+      "proficiencies": [],
+      "starting_spells": [4],
+      "starting_items": [0]
+    }
+  ]
 }
