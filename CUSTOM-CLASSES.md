@@ -20,9 +20,9 @@ classes with IDs 0–14; use an unused ID when adding another class.
   "classes": [
     {
       "id": 15,
-      "internal_name": "field_medic",
-      "display_name": "Field Medic",
-      "description": "A support class trained to keep a party alive.",
+      "internal_name": "dune_sentinel",
+      "display_name": "Dune Sentinel",
+      "description": "A sample class definition with a stable custom ID.",
       "max_hp": 0,
       "max_mp": 10,
       "STR": -1,
@@ -82,5 +82,5 @@ spell or item definitions; those still need to exist in the game data.
 Custom classes currently support stat modifiers, starting proficiencies,
 starting items, starting spells, and race restrictions. Their hotbar layouts
 still use the built-in class system and are not yet separately configurable.
-This JSON loader is not yet an in-game class editor, and custom passive ability
+The editor does not create new spell or item definitions, and custom passive ability
 definitions are a later feature.
