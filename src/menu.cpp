@@ -2586,11 +2586,6 @@ static void handleMainMenu(bool mode)
 				}
 			}
 
-			for ( auto it = lockedClasses.begin(); it != lockedClasses.end(); ++it )
-			{
-				displayedClasses.push_back(*it);
-			}
-
 			int customClassesDisplayed = 0;
 			for ( const CustomClass& customClass : CustomClassManager::getClasses() )
 			{
@@ -2603,6 +2598,11 @@ static void handleMainMenu(bool mode)
 				}
 			}
 			entriesToDisplay += customClassesDisplayed;
+
+			for ( auto it = lockedClasses.begin(); it != lockedClasses.end(); ++it )
+			{
+				displayedClasses.push_back(*it);
+			}
 
 			int drawLockedTooltip = 0;
 			SDL_Rect tooltip;
