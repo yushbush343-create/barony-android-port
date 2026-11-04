@@ -11,6 +11,7 @@
 
 #include "main.hpp"
 #include <list>
+#include <algorithm>
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
