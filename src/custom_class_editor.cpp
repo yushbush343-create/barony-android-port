@@ -574,8 +574,7 @@ namespace
 
         if ( !parseIntegerList(fieldText(fields.allowedRaces), customClass.allowedRaces)
             || !parseIntegerList(fieldText(fields.proficiencies), customClass.proficiencies)
-            || !parseIntegerList(fieldText(fields.startingSpells), customClass.startingSpells)
- )
+            || !parseIntegerList(fieldText(fields.startingSpells), customClass.startingSpells) )
         {
             setStatus("List fields must contain comma-separated integers.");
             return;
