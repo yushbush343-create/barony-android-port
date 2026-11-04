@@ -12,6 +12,7 @@
 #include "main.hpp"
 #include <list>
 #include <algorithm>
+#include <iterator>
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
