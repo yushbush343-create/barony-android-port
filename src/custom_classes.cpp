@@ -292,35 +292,6 @@ void CustomClassManager::init()
             }
         }
 
-        if (itr->HasMember("starting_items"))
-        {
-            const rapidjson::Value& items = (*itr)["starting_items"];
-            if (!items.IsArray())
-            {
-                printlog("[CustomClasses]: Skipping '%s': starting_items must be an array.",
-                    customClass.internalName.c_str());
-                continue;
-            }
-
-            bool validItems = true;
-            for (rapidjson::Value::ConstValueIterator item = items.Begin();
-                 item != items.End(); ++item)
-            {
-                if (!item->IsInt() || item->GetInt() < 0 || item->GetInt() >= NUMITEMS)
-                {
-                    validItems = false;
-                    break;
-                }
-                customClass.startingItems.push_back(item->GetInt());
-            }
-            if (!validItems)
-            {
-                printlog("[CustomClasses]: Skipping '%s': invalid starting item ID.",
-                    customClass.internalName.c_str());
-                continue;
-            }
-        }
-
         usedIds.insert(customClass.id);
         usedNames.insert(customClass.internalName);
         classes.push_back(customClass);
@@ -399,14 +370,6 @@ bool CustomClassManager::save()
                 return false;
             }
         }
-        for ( int item : customClass.startingItems )
-        {
-            if ( item < 0 || item >= NUMITEMS )
-            {
-                printlog("[CustomClasses]: Invalid starting item in '%s'.", customClass.internalName.c_str());
-                return false;
-            }
-        }
 
         usedIds.insert(customClass.id);
         usedNames.insert(customClass.internalName);
@@ -471,13 +434,6 @@ bool CustomClassManager::save()
         }
         writer.EndArray();
 
-        writer.Key("starting_items");
-        writer.StartArray();
-        for ( int item : customClass.startingItems )
-        {
-            writer.Int(item);
-        }
-        writer.EndArray();
         writer.EndObject();
     }
     writer.EndArray();
