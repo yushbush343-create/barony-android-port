@@ -411,6 +411,8 @@ namespace
         const int formHeight = panelHeight - 138;
         formFrame->setSize({ 245, 62, formWidth, formHeight });
         formFrame->setColor(0);
+        formFrame->setScrollBarsEnabled(true);
+        formFrame->setActualSize({ 0, 0, formWidth, std::max(formHeight, 440) });
 
         addLabel(*formFrame, "idLabel", "ID", { 0, 0, 24, 24 });
         fields.id = addInput(*formFrame, "classId", 4, { 30, 0, 54, 24 },
