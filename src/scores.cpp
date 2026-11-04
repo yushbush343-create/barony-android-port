@@ -6457,7 +6457,10 @@ int loadGame(int player, const SaveGameInfo& info) {
 	}
 
 	// load player data
-	client_classes[statsPlayer] = info.players[player].char_class;
+	const int savedClassId = info.players[player].char_class;
+	client_classes[statsPlayer] = (savedClassId >= 0 && savedClassId < NUMCLASSES)
+		|| CustomClassManager::isCustomClassId(savedClassId)
+		? savedClassId : CLASS_BARBARIAN;
 	stats[statsPlayer]->playerRace = info.players[player].race;
 	for ( int c = 0; c < NUMMONSTERS; ++c )
 	{
