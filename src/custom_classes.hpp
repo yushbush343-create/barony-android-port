@@ -27,7 +27,6 @@ struct CustomClass
     std::vector<int> allowedRaces;
     std::vector<int> proficiencies;
     std::vector<int> startingSpells;
-    std::vector<int> startingItems;
 };
 
 class CustomClassManager
