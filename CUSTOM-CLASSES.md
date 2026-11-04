@@ -62,8 +62,7 @@ array order; version 2 with explicit IDs is recommended.
 
 ## In-game editor
 
-Open **Custom Class Editor** from the lower-right corner of the title menu or
-pause menu. It supports creating, editing, saving, and deleting custom classes.
+Open **Custom Class Editor** from the lower-right corner of the title menu. It supports creating, editing, saving, and deleting custom classes.
 Changes are written to the game's writable PhysicsFS directory at
 `mods/custom/classes.json` and are loaded on the next game start.
 
