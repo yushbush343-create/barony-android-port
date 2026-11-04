@@ -53,7 +53,6 @@ classes with IDs 0–14; use an unused ID when adding another class.
 - `proficiencies`: flat pairs of proficiency ID and starting value. Values
   must be from 0 to 100.
 - `starting_spells`: array of spell IDs from the source spell enum.
-- `starting_items`: array of item IDs from the source item enum.
 
 The loader rejects malformed files, duplicate IDs/names, out-of-range IDs,
 invalid item/spell/proficiency references, and files larger than 1 MiB. Version
@@ -71,15 +70,14 @@ The list fields accept comma-separated numeric IDs:
 - Proficiencies: alternating proficiency ID and starting value, e.g.
   `2,25,5,40`.
 - Starting spells: spell IDs from the source spell enum.
-- Starting items: item IDs from the source item enum.
 
 The editor validates the values when Save is pressed. It does not create new
-spell or item definitions; those still need to exist in the game data.
+spell definitions; those still need to exist in the game data.
 
 ## Current limitations
 
 Custom classes currently support stat modifiers, starting proficiencies,
-starting items, starting spells, and race restrictions. Their hotbar layouts
+starting spells, and race restrictions. Their hotbar layouts
 still use the built-in class system and are not yet separately configurable.
 The editor does not create new spell or item definitions, and custom passive ability
 definitions are a later feature.
