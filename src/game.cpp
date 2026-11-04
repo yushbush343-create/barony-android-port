@@ -8138,12 +8138,7 @@ int main(int argc, char** argv)
 
 				if ( gamePaused )
 				{
-					if ( !CustomClassEditor::draw() )
-					{
-						MainMenu::doMainMenu(!intro);
-						ensureCustomClassEditorButton();
-						CustomClassEditor::draw();
-					}
+					MainMenu::doMainMenu(!intro);
 				}
 				else
 				{
