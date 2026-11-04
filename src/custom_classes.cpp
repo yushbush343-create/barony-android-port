@@ -158,7 +158,7 @@ void CustomClassManager::init()
         {
             customClass.displayName = customClass.internalName;
         }
-        if (customClass.displayName.size() > 128)
+        if (customClass.displayName.size() > 63)
         {
             printlog("[CustomClasses]: Skipping '%s': display_name is too long.",
                 customClass.internalName.c_str());
