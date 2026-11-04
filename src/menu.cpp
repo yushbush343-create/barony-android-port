@@ -18,6 +18,7 @@
 #include "entity.hpp"
 #include "files.hpp"
 #include "menu.hpp"
+#include "custom_classes.hpp"
 #include "classdescriptions.hpp"
 #include "interface/interface.hpp"
 #include "magic/magic.hpp"
@@ -55,6 +56,29 @@
 #include "ui/Font.hpp"
 #include "ui/MainMenu.hpp"
 #include "ui/Image.hpp"
+
+static const char* playerClassDisplayName(int classId, int player)
+{
+    const CustomClass* customClass = CustomClassManager::getClass(classId);
+    if (customClass)
+    {
+        return customClass->displayName.c_str();
+    }
+    return playerClassLangEntry(classId, player);
+}
+
+static const char* playerClassDescriptionText(int classId, int player)
+{
+    const CustomClass* customClass = CustomClassManager::getClass(classId);
+    if (customClass)
+    {
+        return customClass->description.empty()
+            ? customClass->displayName.c_str()
+            : customClass->description.c_str();
+    }
+    return playerClassDescription(classId, player);
+}
+
 
 #ifdef STEAMWORKS
 //Helper func. //TODO: Bugger.
@@ -602,6 +626,16 @@ int isCharacterValidFromDLC(Stat& myStats, int characterClass)
 			break;
 		default:
 			break;
+	}
+
+	if ( const CustomClass* customClass = CustomClassManager::getClass(characterClass) )
+	{
+		if ( std::find(customClass->allowedRaces.begin(), customClass->allowedRaces.end(),
+			myStats.playerRace) != customClass->allowedRaces.end() )
+		{
+			return VALID_OK_CHARACTER;
+		}
+		return INVALID_CHARACTER;
 	}
 
 	if ( myStats.playerRace == RACE_HUMAN )
@@ -2034,7 +2068,7 @@ static void handleMainMenu(bool mode)
 										stats[0]->sex = lastSex;
 									}
 									// convert human class to monster special classes on reselect.
-									if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+									if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 										&& stats[0]->appearance == 0 )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2044,7 +2078,7 @@ static void handleMainMenu(bool mode)
 										stats[0]->clearStats();
 										initClass(0);
 									}
-									else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK
+									else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 										&& lastAppearance == 0 )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2183,7 +2217,7 @@ static void handleMainMenu(bool mode)
 								{
 									stats[0]->appearance = 0; // use racial passives
 									// convert human class to monster special classes on reselect.
-									if ( client_classes[0] > CLASS_MONK )
+									if ( client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 										{
@@ -2256,7 +2290,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->sex = lastSex;
 					}
 					// convert human class to monster special classes on reselect.
-					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& stats[0]->appearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2266,7 +2300,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->clearStats();
 						initClass(0);
 					}
-					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK
+					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& lastAppearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2310,7 +2344,7 @@ static void handleMainMenu(bool mode)
 					{
 						stats[0]->appearance = 0;
 						// convert human class to monster special classes on reselect.
-						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK )
+						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 						{
 							if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 							{
@@ -2395,7 +2429,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->sex = lastSex;
 					}
 					// convert human class to monster special classes on reselect.
-					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& stats[0]->appearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2405,7 +2439,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->clearStats();
 						initClass(0);
 					}
-					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK 
+					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES 
 						&& lastAppearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2449,7 +2483,7 @@ static void handleMainMenu(bool mode)
 					{
 						stats[0]->appearance = 0;
 						// convert human class to monster special classes on reselect.
-						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK )
+						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 						{
 							if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 							{
@@ -2557,6 +2591,19 @@ static void handleMainMenu(bool mode)
 				displayedClasses.push_back(*it);
 			}
 
+			int customClassesDisplayed = 0;
+			for ( const CustomClass& customClass : CustomClassManager::getClasses() )
+			{
+				const int customClassId = NUMCLASSES + customClass.id;
+				if ( isCharacterValidFromDLC(*stats[0], customClassId) == VALID_OK_CHARACTER )
+				{
+					availableClasses.insert(customClassId);
+					displayedClasses.push_back(customClassId);
+					++customClassesDisplayed;
+				}
+			}
+			entriesToDisplay += customClassesDisplayed;
+
 			int drawLockedTooltip = 0;
 			SDL_Rect tooltip;
 			for ( c = 0; c < entriesToDisplay; c++ )
@@ -2594,7 +2641,7 @@ static void handleMainMenu(bool mode)
 
 				if ( classToPick == client_classes[0] )
 				{
-					ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[o] %s", playerClassLangEntry(classToPick, 0));
+					ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[o] %s", playerClassDisplayName(classToPick, 0));
 				}
 				else
 				{
@@ -2607,7 +2654,7 @@ static void handleMainMenu(bool mode)
 						img.w = 22;
 						img.h = 20;
 						drawImageScaled(sidebar_unlock_bmp, nullptr, &img);
-						ttfPrintTextFormattedColor(ttf16, subx1 + 32, pady, uint32ColorGray, "[ ] %s", playerClassLangEntry(classToPick, 0));
+						ttfPrintTextFormattedColor(ttf16, subx1 + 32, pady, uint32ColorGray, "[ ] %s", playerClassDisplayName(classToPick, 0));
 
 						if ( mouseInBounds(clientnum, subx1 + 40, subx1 + 72, pady, pady + 16) )
 						{
@@ -2626,7 +2673,7 @@ static void handleMainMenu(bool mode)
 					}
 					else
 					{
-						ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[ ] %s", playerClassLangEntry(classToPick, 0));
+						ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[ ] %s", playerClassDisplayName(classToPick, 0));
 					}
 				}
 
@@ -2702,7 +2749,7 @@ static void handleMainMenu(bool mode)
 			}
 
 			// class description
-			ttfPrintText(ttf12, subx1 + 8, suby2 - 80, playerClassDescription(client_classes[0], 0));
+			ttfPrintText(ttf12, subx1 + 8, suby2 - 80, playerClassDescriptionText(client_classes[0], 0));
 
 			if ( drawLockedTooltip > 0 )
 			{
@@ -4718,7 +4765,7 @@ static void handleMainMenu(bool mode)
 			{
 				raceAndClass += "(aesthetic) ";
 			}
-			raceAndClass += playerClassLangEntry(client_classes[c], c);
+			raceAndClass += playerClassDisplayName(client_classes[c], c);
 
 			if ( charDisplayName.size() > 39 )
 			{
@@ -5890,7 +5937,7 @@ static void handleMainMenu(bool mode)
 				ttfPrintTextFormatted(ttf16, subx1 + 448, suby1 + 56, "%s", stats[clientnum]->name);
 
 				char classname[64];
-				strcpy(classname, playerClassLangEntry(client_classes[0], clientnum));
+				strcpy(classname, playerClassDisplayName(client_classes[0], clientnum));
 				classname[0] -= 32;
 				int creature = HUMAN;
 				if ( players[clientnum] && players[clientnum]->entity )
@@ -5931,7 +5978,7 @@ static void handleMainMenu(bool mode)
 			}
 
 			// print character stats
-			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 128, Language::get(359), stats[clientnum]->LVL, playerClassLangEntry(client_classes[clientnum], clientnum));
+			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 128, Language::get(359), stats[clientnum]->LVL, playerClassDisplayName(client_classes[clientnum], clientnum));
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 140, Language::get(1396), stats[clientnum]->EXP);
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 152, Language::get(1397), stats[clientnum]->GOLD);
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 164, Language::get(361), currentlevel);
@@ -11744,7 +11791,7 @@ void buttonRandomCharacter(button_t* my)
 	//	else
 	//	{
 	//		client_classes[0] = local_rng.rand() % (CLASS_MONK + 2);
-	//		if ( client_classes[0] > CLASS_MONK )
+	//		if ( client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 	//		{
 	//			client_classes[0] = CLASS_MONK + stats[0]->playerRace; // monster specific classes.
 	//		}
@@ -11802,7 +11849,18 @@ bool replayLastCharacter(const int index, int multiplayer)
 		stats[index]->sex = static_cast<sex_t>(std::min(lastSex, (int)sex_t::FEMALE));
 		stats[index]->playerRace = std::min(std::max(static_cast<int>(RACE_HUMAN), lastRace), static_cast<int>(RACE_ENUM_END - 1));
 		stats[index]->stat_appearance = lastAppearance;
-		client_classes[index] = std::min(std::max(0, lastClass), static_cast<int>(NUMCLASSES - 1));
+		if ( lastClass < NUMCLASSES )
+		{
+			client_classes[index] = std::min(std::max(0, lastClass), static_cast<int>(NUMCLASSES - 1));
+		}
+		else if ( CustomClassManager::isCustomClassId(lastClass) )
+		{
+			client_classes[index] = lastClass;
+		}
+		else
+		{
+			client_classes[index] = CLASS_BARBARIAN;
+		}
 
 		switch ( isCharacterValidFromDLC(*stats[index], lastClass) )
 		{
