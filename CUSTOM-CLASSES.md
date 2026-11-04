@@ -32,7 +32,7 @@ classes with IDs 0–14; use an unused ID when adding another class.
       "PER": 1,
       "CHR": 1,
       "proficiencies": [],
-      "starting_spells": [],
+      "starting_spells": []
     }
   ]
 }
@@ -54,7 +54,7 @@ classes with IDs 0–14; use an unused ID when adding another class.
 - `starting_spells`: array of spell IDs from the source spell enum.
 
 The loader rejects malformed files, duplicate IDs/names, out-of-range IDs,
-invalid item/spell/proficiency references, and files larger than 1 MiB. Version
+invalid spell/proficiency references, and files larger than 1 MiB. Version
 1 files are still accepted for compatibility, but their IDs are assigned by
 array order; version 2 with explicit IDs is recommended.
 
