@@ -14,7 +14,7 @@ namespace
 {
 constexpr PHYSFS_sint64 MAX_CUSTOM_CLASSES_FILE_SIZE = 1024 * 1024;
 constexpr int MAX_CUSTOM_CLASSES = 64;
-constexpr int MAX_CUSTOM_CLASS_ID = 255;
+constexpr int MAX_CUSTOM_CLASS_ID = 127 - NUMCLASSES;
 
 bool readOptionalInt(
     const rapidjson::Value& object,
