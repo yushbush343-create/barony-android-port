@@ -25,6 +25,13 @@ val baronyVersionName = providers.gradleProperty("baronyVersionName")
 val baseAndroidManifest = file("src/main/AndroidManifest.xml")
 val generatedBaronyManifest = layout.buildDirectory.file("generated/baronyManifest/AndroidManifest.xml")
 val baronyNoticeAssets = layout.buildDirectory.dir("generated/baronyNotices/assets")
+val baronyCustomAssets = layout.buildDirectory.dir("generated/baronyCustomAssets")
+val generateBaronyCustomAssets by tasks.registering(Sync::class) {
+    from(rootProject.file("../custom/classes.json")) {
+        into("custom")
+    }
+    into(baronyCustomAssets)
+}
 val sdlJavaSource = rootProject.file("../external/SDL/android-project/app/src/main/java")
 val generatedSdlJava = layout.buildDirectory.dir("generated/sdlJava")
 require(baronyTargetAbi in setOf("arm64-v8a", "x86_64")) {
@@ -194,6 +201,7 @@ android {
             java.srcDir(generatedSdlJava)
             if (baronyBuildGame) {
                 assets.srcDir(baronyNoticeAssets)
+                assets.srcDir(baronyCustomAssets)
             }
         }
     }
@@ -232,5 +240,6 @@ if (baronyBuildGame) {
 
     tasks.named("preBuild") {
         dependsOn(generateBaronyNotices)
+            dependsOn(generateBaronyCustomAssets)
     }
 }
