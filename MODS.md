@@ -85,7 +85,7 @@ with **Back** unloads them.
 ## Custom classes in this fork
 
 This fork includes 15 additional character classes and an in-game **Custom
-Class Editor** on the title and pause menus. The editor saves definitions to
+Class Editor** from the title menu. The editor saves definitions to
 the writable app-data path `mods/custom/classes.json`.
 
 A mod can add or override custom class definitions by including
