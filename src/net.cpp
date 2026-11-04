@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#include "custom_classes.hpp"
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -6507,7 +6508,9 @@ static std::unordered_map<Uint32, void(*)()> clientPacketHandlers = {
 		}
 		racename += getMonsterLocalizedName(getMonsterFromPlayerRace(gui.savedRace)).c_str();
 		camelCaseString(racename);
-		std::string classname = playerClassLangEntry(gui.savedClass >= 0 ? gui.savedClass : client_classes[player], player);
+		const int displayClassId = gui.savedClass >= 0 ? gui.savedClass : client_classes[player];
+		const CustomClass* customClass = CustomClassManager::getClass(displayClassId);
+		std::string classname = customClass ? customClass->displayName : playerClassLangEntry(displayClassId, player);
 		camelCaseString(classname);
 		if ( player == clientnum )
 		{
@@ -9221,7 +9224,9 @@ static std::unordered_map<Uint32, void(*)()> serverPacketHandlers = {
 			}
 			racename += getMonsterLocalizedName(getMonsterFromPlayerRace(gui.savedRace)).c_str();
 			camelCaseString(racename);
-			std::string classname = playerClassLangEntry(gui.savedClass >= 0 ? gui.savedClass : client_classes[player], player);
+			const int displayClassId = gui.savedClass >= 0 ? gui.savedClass : client_classes[player];
+		const CustomClass* customClass = CustomClassManager::getClass(displayClassId);
+		std::string classname = customClass ? customClass->displayName : playerClassLangEntry(displayClassId, player);
 			camelCaseString(classname);
 
 			for ( int i = 0; i < MAXPLAYERS; ++i )
