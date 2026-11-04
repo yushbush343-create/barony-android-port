@@ -10,14 +10,16 @@ file in the APK.
 Use a unique numeric `id` for each class. The game ID is
 `NUMCLASSES + id`; keep the ID unchanged after players have created saves
 with that class. Current network packets require the resulting game ID to be
-no greater than 127, so the current valid custom ID range is 0–101.
+no greater than 127, so the current valid custom ID range is 0–101. The
+loader accepts up to 64 class definitions. This fork currently includes 15
+classes with IDs 0–14; use an unused ID when adding another class.
 
 ```json
 {
   "version": 2,
   "classes": [
     {
-      "id": 0,
+      "id": 15,
       "internal_name": "field_medic",
       "display_name": "Field Medic",
       "description": "A support class trained to keep a party alive.",
