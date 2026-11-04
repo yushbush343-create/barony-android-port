@@ -1,5 +1,6 @@
 list(APPEND GAME_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/custom_classes.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/custom_class_editor.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/android_data_bridge.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/android_dlc_bridge.cpp"
