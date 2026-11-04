@@ -60,6 +60,23 @@ invalid item/spell/proficiency references, and files larger than 1 MiB. Version
 1 files are still accepted for compatibility, but their IDs are assigned by
 array order; version 2 with explicit IDs is recommended.
 
+## In-game editor
+
+Open **Custom Class Editor** from the lower-right corner of the title menu or
+pause menu. It supports creating, editing, saving, and deleting custom classes.
+Changes are written to the game's writable PhysicsFS directory at
+`mods/custom/classes.json` and are loaded on the next game start.
+
+The list fields accept comma-separated numeric IDs:
+- Allowed races: race IDs from the source `RACE_*` enum. Leave blank for Humans.
+- Proficiencies: alternating proficiency ID and starting value, e.g.
+  `2,25,5,40`.
+- Starting spells: spell IDs from the source spell enum.
+- Starting items: item IDs from the source item enum.
+
+The editor validates the values when Save is pressed. It does not create new
+spell or item definitions; those still need to exist in the game data.
+
 ## Current limitations
 
 Custom classes currently support stat modifiers, starting proficiencies,
