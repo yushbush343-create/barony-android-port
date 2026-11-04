@@ -777,18 +777,6 @@ void initClass(const int player)
 		{
 			initClassStats(client_classes[player], stats[player]);
 
-			if ( isLocalPlayer )
-			{
-				for ( const int itemType : customClass->startingItems )
-				{
-					if ( itemType >= 0 && itemType < NUMITEMS )
-					{
-						item = newItem(static_cast<ItemType>(itemType), SERVICABLE, 0, 1, 0, true, nullptr);
-						item2 = itemPickup(player, item);
-						free(item);
-					}
-				}
-			}
 		}
 	}
 	// barbarian
