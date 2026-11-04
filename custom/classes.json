@@ -3,20 +3,361 @@
   "classes": [
     {
       "id": 0,
-      "internal_name": "test_class",
-      "display_name": "Test Class",
-      "description": "A test class used to verify custom class loading and character selection.",
-      "max_hp": 20,
-      "max_mp": 15,
+      "internal_name": "vanguard",
+      "display_name": "Vanguard",
+      "description": "A frontline fighter whose signature Strike spell turns a measured opening into a decisive melee attack.",
+      "max_hp": 8,
+      "max_mp": -5,
       "STR": 2,
       "DEX": 1,
       "CON": 2,
+      "INT": -1,
+      "PER": 1,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        41
+      ],
+      "starting_items": [
+        2,
+        5,
+        37
+      ]
+    },
+    {
+      "id": 1,
+      "internal_name": "pyromancer",
+      "display_name": "Pyromancer",
+      "description": "An elemental caster built around explosive fire magic and high mana reserves.",
+      "max_hp": -3,
+      "max_mp": 15,
+      "STR": -1,
+      "DEX": 0,
+      "CON": -1,
+      "INT": 3,
+      "PER": 1,
+      "CHR": 1,
+      "proficiencies": [],
+      "starting_spells": [
+        4
+      ],
+      "starting_items": [
+        1,
+        42,
+        89
+      ]
+    },
+    {
+      "id": 2,
+      "internal_name": "cryomancer",
+      "display_name": "Cryomancer",
+      "description": "A cold specialist who controls space with a powerful Ice Wave.",
+      "max_hp": -2,
+      "max_mp": 15,
+      "STR": -1,
+      "DEX": 1,
+      "CON": 0,
+      "INT": 3,
+      "PER": 1,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        68
+      ],
+      "starting_items": [
+        1,
+        42,
+        88
+      ]
+    },
+    {
+      "id": 3,
+      "internal_name": "stormcaller",
+      "display_name": "Stormcaller",
+      "description": "A lightning-focused caster who strikes enemies from a distance.",
+      "max_hp": -2,
+      "max_mp": 15,
+      "STR": -1,
+      "DEX": 1,
+      "CON": 0,
+      "INT": 2,
+      "PER": 2,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        5
+      ],
+      "starting_items": [
+        1,
+        42,
+        90
+      ]
+    },
+    {
+      "id": 4,
+      "internal_name": "field_medic",
+      "display_name": "Field Medic",
+      "description": "A support specialist with Healing and Heal Other to keep a party fighting.",
+      "max_hp": 5,
+      "max_mp": 10,
+      "STR": 0,
+      "DEX": 0,
+      "CON": 1,
+      "INT": 2,
+      "PER": 1,
+      "CHR": 2,
+      "proficiencies": [],
+      "starting_spells": [
+        18,
+        91
+      ],
+      "starting_items": [
+        3,
+        5,
+        59
+      ]
+    },
+    {
+      "id": 5,
+      "internal_name": "warden",
+      "display_name": "Warden",
+      "description": "A durable protector who uses Guard Body and Divine Guard to withstand danger.",
+      "max_hp": 12,
+      "max_mp": 5,
+      "STR": 1,
+      "DEX": 0,
+      "CON": 3,
+      "INT": 0,
+      "PER": 1,
+      "CHR": 1,
+      "proficiencies": [],
+      "starting_spells": [
+        70,
+        72
+      ],
+      "starting_items": [
+        2,
+        5,
+        37
+      ]
+    },
+    {
+      "id": 6,
+      "internal_name": "shadowblade",
+      "display_name": "Shadowblade",
+      "description": "A mobile ambusher combining stealth magic with the ability to Steal Weapon.",
+      "max_hp": 2,
+      "max_mp": 5,
+      "STR": 1,
+      "DEX": 3,
+      "CON": 0,
+      "INT": 1,
+      "PER": 2,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        16,
+        28
+      ],
+      "starting_items": [
+        2,
+        28,
+        30
+      ]
+    },
+    {
+      "id": 7,
+      "internal_name": "necromancer",
+      "display_name": "Necromancer",
+      "description": "A dark caster who drains life and can call a summoned ally into battle.",
+      "max_hp": -5,
+      "max_mp": 20,
+      "STR": -1,
+      "DEX": 0,
+      "CON": -1,
       "INT": 3,
       "PER": 1,
       "CHR": 2,
       "proficiencies": [],
-      "starting_spells": [4],
-      "starting_items": [0]
+      "starting_spells": [
+        29,
+        22
+      ],
+      "starting_items": [
+        1,
+        42,
+        85
+      ]
+    },
+    {
+      "id": 8,
+      "internal_name": "beastmaster",
+      "display_name": "Beastmaster",
+      "description": "A wilderness controller who charms and dominates hostile creatures.",
+      "max_hp": 4,
+      "max_mp": 5,
+      "STR": 1,
+      "DEX": 1,
+      "CON": 1,
+      "INT": 0,
+      "PER": 3,
+      "CHR": 2,
+      "proficiencies": [],
+      "starting_spells": [
+        31,
+        25
+      ],
+      "starting_items": [
+        12,
+        1,
+        30
+      ]
+    },
+    {
+      "id": 9,
+      "internal_name": "alchemist",
+      "display_name": "Alchemist",
+      "description": "A resilient experimenter with ailment-curing and poison magic.",
+      "max_hp": 1,
+      "max_mp": 10,
+      "STR": 0,
+      "DEX": 1,
+      "CON": 2,
+      "INT": 2,
+      "PER": 1,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        20,
+        38
+      ],
+      "starting_items": [
+        1,
+        59,
+        60
+      ]
+    },
+    {
+      "id": 10,
+      "internal_name": "ranger",
+      "display_name": "Ranger",
+      "description": "A scout who detects enemies and pinpoints threats before they get close.",
+      "max_hp": 4,
+      "max_mp": 5,
+      "STR": 1,
+      "DEX": 2,
+      "CON": 1,
+      "INT": 0,
+      "PER": 3,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        88,
+        78
+      ],
+      "starting_items": [
+        12,
+        7,
+        30
+      ]
+    },
+    {
+      "id": 11,
+      "internal_name": "bard",
+      "display_name": "Bard",
+      "description": "A charismatic support caster whose instrument magic and ally-scrying aid the group.",
+      "max_hp": 2,
+      "max_mp": 10,
+      "STR": 0,
+      "DEX": 1,
+      "CON": 0,
+      "INT": 1,
+      "PER": 1,
+      "CHR": 3,
+      "proficiencies": [],
+      "starting_spells": [
+        95,
+        80
+      ],
+      "starting_items": [
+        1,
+        43,
+        59
+      ]
+    },
+    {
+      "id": 12,
+      "internal_name": "geomancer",
+      "display_name": "Geomancer",
+      "description": "A sturdy earth mage who shapes terrain and hardens the body with stone magic.",
+      "max_hp": 6,
+      "max_mp": 10,
+      "STR": 1,
+      "DEX": 0,
+      "CON": 2,
+      "INT": 2,
+      "PER": 1,
+      "CHR": 0,
+      "proficiencies": [],
+      "starting_spells": [
+        23,
+        21
+      ],
+      "starting_items": [
+        1,
+        5,
+        83
+      ]
+    },
+    {
+      "id": 13,
+      "internal_name": "chronomancer",
+      "display_name": "Chronomancer",
+      "description": "A time manipulator who slows foes, hastens allies, and teleports through danger.",
+      "max_hp": -4,
+      "max_mp": 20,
+      "STR": -1,
+      "DEX": 1,
+      "CON": -1,
+      "INT": 3,
+      "PER": 2,
+      "CHR": 1,
+      "proficiencies": [],
+      "starting_spells": [
+        12,
+        39,
+        17
+      ],
+      "starting_items": [
+        1,
+        42,
+        87
+      ]
+    },
+    {
+      "id": 14,
+      "internal_name": "trickster",
+      "display_name": "Trickster",
+      "description": "An evasive disruptor who confuses enemies, dashes through combat, and pulls targets out of position.",
+      "max_hp": 1,
+      "max_mp": 10,
+      "STR": 0,
+      "DEX": 3,
+      "CON": 0,
+      "INT": 1,
+      "PER": 2,
+      "CHR": 2,
+      "proficiencies": [],
+      "starting_spells": [
+        11,
+        51,
+        46
+      ],
+      "starting_items": [
+        12,
+        28,
+        63
+      ]
     }
   ]
 }
