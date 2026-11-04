@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
+#include <utility>
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
