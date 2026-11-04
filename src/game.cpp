@@ -61,6 +61,7 @@
 
 #include "UnicodeDecoder.h"
 
+#include <algorithm>
 #include <atomic>
 #include <future>
 #include <thread>
