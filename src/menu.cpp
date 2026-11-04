@@ -106,6 +106,8 @@ bool lobby_window = false;
 bool settings_window = false;
 int connect_window = 0;
 int charcreation_step = 0;
+int charcreationClassListScroll = 0;
+int charcreationPreviousClassForScroll = -1;
 int loadGameSaveShowRectangle = 0; // stores the current amount of savegames available, to use when drawing load game window boxes.
 int singleplayerSavegameFreeSlot = -1; // used on multiplayer/single player select window to store if savefile exists. 
 int multiplayerSavegameFreeSlot = -1; // used on multiplayer/single player select window to store if savefile exists.
@@ -2605,12 +2607,81 @@ static void handleMainMenu(bool mode)
 				displayedClasses.push_back(*it);
 			}
 
+			const int classListTop = suby1 + 56;
+			const int classListVisibleRows = 23;
+			const int classListMaxScroll = std::max(0, entriesToDisplay - classListVisibleRows);
+			charcreationClassListScroll = std::max(0, std::min(charcreationClassListScroll, classListMaxScroll));
+
+			if ( charcreationPreviousClassForScroll != client_classes[0] )
+			{
+				auto selectedClass = std::find(displayedClasses.begin(),
+					displayedClasses.begin() + entriesToDisplay, client_classes[0]);
+				if ( selectedClass != displayedClasses.begin() + entriesToDisplay )
+				{
+					const int selectedIndex = static_cast<int>(std::distance(displayedClasses.begin(), selectedClass));
+					if ( selectedIndex < charcreationClassListScroll )
+					{
+						charcreationClassListScroll = selectedIndex;
+					}
+					else if ( selectedIndex >= charcreationClassListScroll + classListVisibleRows )
+					{
+						charcreationClassListScroll = selectedIndex - classListVisibleRows + 1;
+					}
+				}
+				else
+				{
+					charcreationClassListScroll = 0;
+				}
+				charcreationPreviousClassForScroll = client_classes[0];
+			}
+
+			const int scrollButtonX = subx1 + 340;
+			const int scrollButtonTop = classListTop;
+			const int scrollButtonBottom = classListTop + 16 * (classListVisibleRows - 1);
+			if ( keystatus[SDLK_PAGEUP] )
+			{
+				keystatus[SDLK_PAGEUP] = 0;
+				charcreationClassListScroll = std::max(0, charcreationClassListScroll - classListVisibleRows);
+			}
+			if ( keystatus[SDLK_PAGEDOWN] )
+			{
+				keystatus[SDLK_PAGEDOWN] = 0;
+				charcreationClassListScroll = std::min(classListMaxScroll,
+					charcreationClassListScroll + classListVisibleRows);
+			}
+			if ( inputs.bMouseLeft(clientnum) )
+			{
+				if ( charcreationClassListScroll > 0
+					&& mouseInBounds(clientnum, scrollButtonX, scrollButtonX + 24, scrollButtonTop, scrollButtonTop + 16) )
+				{
+					inputs.mouseClearLeft(clientnum);
+					--charcreationClassListScroll;
+				}
+				else if ( charcreationClassListScroll < classListMaxScroll
+					&& mouseInBounds(clientnum, scrollButtonX, scrollButtonX + 24, scrollButtonBottom, scrollButtonBottom + 16) )
+				{
+					inputs.mouseClearLeft(clientnum);
+					++charcreationClassListScroll;
+				}
+			}
+			if ( charcreationClassListScroll > 0 )
+			{
+				drawDepressed(scrollButtonX, scrollButtonTop, scrollButtonX + 24, scrollButtonTop + 16);
+				ttfPrintText(ttf12, scrollButtonX + 8, scrollButtonTop + 2, "^");
+			}
+			if ( charcreationClassListScroll < classListMaxScroll )
+			{
+				drawDepressed(scrollButtonX, scrollButtonBottom, scrollButtonX + 24, scrollButtonBottom + 16);
+				ttfPrintText(ttf12, scrollButtonX + 8, scrollButtonBottom + 2, "v");
+			}
+
 			int drawLockedTooltip = 0;
 			SDL_Rect tooltip;
-			for ( c = 0; c < entriesToDisplay; c++ )
+			for ( c = charcreationClassListScroll;
+				c < entriesToDisplay && c < charcreationClassListScroll + classListVisibleRows; c++ )
 			{
 				int classToPick = displayedClasses.at(c);
-				int pady = suby1 + 56 + 16 * c;
+				int pady = classListTop + 16 * (c - charcreationClassListScroll);
 				if ( lockedClasses.find(classToPick) != lockedClasses.end() )
 				{
 					pady += 8;
@@ -11633,6 +11704,8 @@ void buttonOpenCharacterCreationWindow(button_t* my)
 
 	// create character creation window
 	charcreation_step = 1;
+	charcreationClassListScroll = 0;
+	charcreationPreviousClassForScroll = -1;
 	raceSelect = 0;
 	camera_charsheet_offsetyaw = (330) * PI / 180;
 	subwindow = 1;
