@@ -63,7 +63,7 @@ $Badging = (& $Aapt2 dump badging $ApkPath 2>&1 | Out-String)
 if ($LASTEXITCODE -ne 0) {
     throw "aapt2 failed to inspect $ApkPath.`n$Badging"
 }
-if ($Badging -notmatch "package: name='com\.zhdan\.baronyport'") {
+if ($Badging -notmatch "package: name='com\\.zhdan\\.baronyport\\.mod'") {
     throw 'Unexpected or missing Android application ID.'
 }
 if ($Badging -notmatch "sdkVersion:'26'") {
