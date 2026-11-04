@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - codex/barony-mod-editor-foundation
   pull_request:
     branches:
       - main
