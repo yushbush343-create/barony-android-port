@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstring>
 #include <cstdlib>
 #include <sstream>
 #include <string>
@@ -146,9 +147,9 @@ namespace
         return stream.str();
     }
 
-    CustomClass* findCustomClass(const int customId)
+    const CustomClass* findCustomClass(const int customId)
     {
-        auto& classes = const_cast<std::vector<CustomClass>&>(CustomClassManager::getClasses());
+        const auto& classes = CustomClassManager::getClasses();
         auto it = std::find_if(classes.begin(), classes.end(),
             [customId](const CustomClass& customClass) { return customClass.id == customId; });
         return it == classes.end() ? nullptr : &(*it);
@@ -233,7 +234,7 @@ namespace
 
     void populateFields()
     {
-        CustomClass* customClass = findCustomClass(selectedCustomId);
+        const CustomClass* customClass = findCustomClass(selectedCustomId);
         if ( !customClass )
         {
             setFieldText(fields.id, "");
@@ -437,7 +438,7 @@ namespace
         const int statGap = 14;
         const int statY1 = 120;
         const int statY2 = 154;
-        const int statX[4] = { 0, 150, 300, 450 };
+        const int statX[4] = { 0, 120, 240, 360 };
         const char* statLabels1[4] = { "HP+", "MP+", "STR", "DEX" };
         const char* statLabels2[4] = { "CON", "INT", "PER", "CHR" };
         Field** statFields1[4] = { &fields.maxHP, &fields.maxMP, &fields.str, &fields.dex };
@@ -475,8 +476,15 @@ namespace
         fields.startingItems = addInput(*formFrame, "startingItems", 256,
             { 0, 360, formWidth - 8, 24 }, "Comma-separated item IDs.");
 
-        fields.status = addLabel(*formFrame, "editorStatus", "Ready.", { 0, 400, formWidth - 8, 30 });
+        fields.status = formFrame->addField("editorStatus", 256);
+        fields.status->setText("Ready.");
+        fields.status->setSize({ 0, 400, formWidth - 8, 30 });
+        fields.status->setEditable(false);
+        fields.status->setColor(color(255, 255, 255));
         fields.status->setTextColor(color(190, 220, 190));
+        fields.status->setBackgroundColor(0);
+        fields.status->setBackgroundActivatedColor(0);
+        fields.status->setOutlineColor(0);
 
         const int buttonY = panelHeight - 52;
         addButton(*panelFrame, "newClass", "New", { 245, buttonY, 84, 30 }, newButtonCallback);
