@@ -1,6 +1,9 @@
 package com.zhdan.baronyport;
 
+import android.app.UiModeManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -8,8 +11,10 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.hardware.input.InputManager;
 import android.os.Build;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.SparseLongArray;
 import android.view.DisplayCutout;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -61,12 +66,23 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
     private static final int SHAPE_CIRCLE = 0;
     private static final int SHAPE_PILL = 1;
 
+    // Barony samples buttons once per frame. Some TV remotes (HDMI-CEC in
+    // particular) report a press and release together, so hold each remote
+    // press for a few frames.
+    private static final long REMOTE_MIN_PRESS_MS = 80;
+
+    private static final int PHYSICAL_INPUT_NONE = 0;
+    private static final int PHYSICAL_INPUT_GAMEPAD = 1;
+    private static final int PHYSICAL_INPUT_KEYBOARD_MOUSE = 2;
+
     private final InputManager inputManager;
+    private final boolean televisionMode;
     private final Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final List<VirtualButton> buttons = new ArrayList<>();
     private final SparseArray<TouchTarget> activeTouches = new SparseArray<>();
+    private final SparseLongArray remotePressTimes = new SparseLongArray();
     private final VirtualStick leftStick = new VirtualStick(AXIS_LEFT_X, AXIS_LEFT_Y, "MOVE");
     private final VirtualStick rightStick = new VirtualStick(AXIS_RIGHT_X, AXIS_RIGHT_Y, "LOOK");
     private final RectF moveZone = new RectF();
@@ -76,7 +92,7 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
 
     private boolean controllerRegistered;
     private boolean destroyed;
-    private boolean physicalControllerPresent;
+    private int physicalInput = PHYSICAL_INPUT_NONE;
     private boolean inputModeInitialized;
     private boolean floatingMoveEnabled;
     private boolean floatingLookEnabled;
@@ -96,6 +112,7 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
     TouchControlsView(Context context) {
         super(context);
         inputManager = (InputManager) context.getSystemService(Context.INPUT_SERVICE);
+        televisionMode = isTelevision(context);
         setBackgroundColor(Color.TRANSPARENT);
         setWillNotDraw(false);
         setFocusable(false);
@@ -116,8 +133,76 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
         if (inputManager != null) {
             inputManager.registerInputDeviceListener(this, null);
         }
-        Log.i(TAG, "BARONY_ANDROID_TOUCH_CONTROLLER_READY");
+        Log.i(TAG, "BARONY_ANDROID_TOUCH_CONTROLLER_READY television="
+                + (televisionMode ? 1 : 0));
         postDelayed(refreshInputModeRunnable, 500);
+    }
+
+    /** Android TV and Google TV devices, which are driven by a remote or gamepad. */
+    static boolean isTelevision(Context context) {
+        UiModeManager uiModeManager =
+                (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+        if (uiModeManager != null
+                && uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            return true;
+        }
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    /**
+     * On a TV, the remote drives the virtual controller: the D-pad moves, OK
+     * confirms, Back cancels, and Menu pauses. Returns true when the event was
+     * consumed.
+     */
+    boolean handleRemoteKey(KeyEvent event) {
+        if (!televisionMode || !controllerRegistered) {
+            return false;
+        }
+        if ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+            return false;
+        }
+        int button;
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                button = event.getKeyCode();
+                break;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                button = KeyEvent.KEYCODE_BUTTON_A;
+                break;
+            case KeyEvent.KEYCODE_BACK:
+                button = KeyEvent.KEYCODE_BUTTON_B;
+                break;
+            case KeyEvent.KEYCODE_MENU:
+                button = KeyEvent.KEYCODE_BUTTON_START;
+                break;
+            default:
+                return false;
+        }
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (event.getRepeatCount() == 0) {
+                remotePressTimes.put(button, SystemClock.uptimeMillis());
+                SDLControllerManager.onNativePadDown(VIRTUAL_DEVICE_ID, button);
+            }
+        } else if (event.getAction() == KeyEvent.ACTION_UP) {
+            final int releasedButton = button;
+            long held = SystemClock.uptimeMillis() - remotePressTimes.get(button, 0L);
+            Runnable release = () -> {
+                if (controllerRegistered) {
+                    SDLControllerManager.onNativePadUp(VIRTUAL_DEVICE_ID, releasedButton);
+                }
+            };
+            if (held >= REMOTE_MIN_PRESS_MS) {
+                release.run();
+            } else {
+                postDelayed(release, REMOTE_MIN_PRESS_MS - held);
+            }
+        }
+        return true;
     }
 
     void setLayoutMode(int mode) {
@@ -168,34 +253,54 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
         if (destroyed) {
             return;
         }
-        boolean hasPhysicalController = hasPhysicalController();
-        if (hasPhysicalController) {
+        int detectedInput = detectPhysicalInput();
+        boolean hideOverlay = detectedInput != PHYSICAL_INPUT_NONE;
+        if (hideOverlay) {
             releaseAllControls();
             unregisterVirtualController();
             setVisibility(GONE);
         } else {
             registerVirtualController();
-            setVisibility(controllerRegistered ? VISIBLE : GONE);
+            // A TV has no touchscreen to use the overlay with; the remote
+            // drives the virtual controller instead.
+            setVisibility(controllerRegistered && !televisionMode ? VISIBLE : GONE);
         }
 
-        if (!inputModeInitialized || physicalControllerPresent != hasPhysicalController) {
-            physicalControllerPresent = hasPhysicalController;
+        if (!inputModeInitialized || physicalInput != detectedInput) {
+            physicalInput = detectedInput;
             inputModeInitialized = true;
-            Log.i(TAG, hasPhysicalController
-                    ? "BARONY_ANDROID_TOUCH_HIDDEN_FOR_GAMEPAD"
-                    : "BARONY_ANDROID_TOUCH_SHOWN");
+            String state;
+            if (detectedInput == PHYSICAL_INPUT_GAMEPAD) {
+                state = "BARONY_ANDROID_TOUCH_HIDDEN_FOR_GAMEPAD";
+            } else if (detectedInput == PHYSICAL_INPUT_KEYBOARD_MOUSE) {
+                state = "BARONY_ANDROID_TOUCH_HIDDEN_FOR_KEYBOARD_MOUSE";
+            } else {
+                state = "BARONY_ANDROID_TOUCH_SHOWN";
+            }
+            Log.i(TAG, state);
             Log.i(TAG, "BARONY_ANDROID_TOUCH_VISIBILITY visible="
-                    + ((!hasPhysicalController && controllerRegistered) ? 1 : 0)
-                    + " physicalController=" + (hasPhysicalController ? 1 : 0)
-                    + " virtualController=" + (controllerRegistered ? 1 : 0));
+                    + ((!hideOverlay && controllerRegistered && !televisionMode) ? 1 : 0)
+                    + " physicalController="
+                    + (detectedInput == PHYSICAL_INPUT_GAMEPAD ? 1 : 0)
+                    + " keyboardMouse="
+                    + (detectedInput == PHYSICAL_INPUT_KEYBOARD_MOUSE ? 1 : 0)
+                    + " virtualController=" + (controllerRegistered ? 1 : 0)
+                    + " television=" + (televisionMode ? 1 : 0));
         }
     }
 
-    private boolean hasPhysicalController() {
+    /**
+     * A connected gamepad, or an external keyboard together with an external
+     * mouse, replaces the touch overlay. A keyboard or mouse alone keeps it,
+     * because neither can play Barony by itself.
+     */
+    private int detectPhysicalInput() {
         if (inputManager == null) {
-            return false;
+            return PHYSICAL_INPUT_NONE;
         }
         boolean physicalControllerFound = false;
+        boolean externalKeyboardFound = false;
+        boolean externalMouseFound = false;
         int candidateCount = 0;
         StringBuilder deviceSummary = new StringBuilder();
         for (int deviceId : InputDevice.getDeviceIds()) {
@@ -204,6 +309,28 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
                 continue;
             }
             int sources = device.getSources();
+            boolean deviceEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1
+                    || device.isEnabled();
+            boolean deviceExternal = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                    || device.isExternal();
+            boolean deviceUsable = !device.isVirtual() && deviceEnabled && deviceExternal;
+
+            boolean keyboard = (sources & InputDevice.SOURCE_KEYBOARD) == InputDevice.SOURCE_KEYBOARD
+                    && device.getKeyboardType() == InputDevice.KEYBOARD_TYPE_ALPHABETIC;
+            boolean mouse = (sources & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE;
+            if (deviceUsable && (keyboard || mouse)) {
+                externalKeyboardFound |= keyboard;
+                externalMouseFound |= mouse;
+                if (deviceSummary.length() > 0) {
+                    deviceSummary.append(';');
+                }
+                deviceSummary.append("id=").append(deviceId)
+                        .append(",name=").append(sanitizeDeviceName(device.getName()))
+                        .append(",sources=0x").append(Integer.toHexString(sources))
+                        .append(",keyboard=").append(keyboard ? 1 : 0)
+                        .append(",mouse=").append(mouse ? 1 : 0);
+            }
+
             boolean gamepad = (sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD;
             boolean joystick = (sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK;
             if (!gamepad && !joystick) {
@@ -236,13 +363,7 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
                 }
             }
 
-            boolean deviceEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1
-                    || device.isEnabled();
-            boolean deviceExternal = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-                    || device.isExternal();
-            boolean accepted = !device.isVirtual()
-                    && deviceEnabled
-                    && deviceExternal
+            boolean accepted = deviceUsable
                     && supportedButtonCount > 0
                     && (gamepad || joystickAxisCount >= 2);
             if (accepted) {
@@ -267,12 +388,19 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
 
         String summary = "accepted=" + (physicalControllerFound ? 1 : 0)
                 + " candidates=" + candidateCount
+                + " keyboard=" + (externalKeyboardFound ? 1 : 0)
+                + " mouse=" + (externalMouseFound ? 1 : 0)
                 + " devices=" + (deviceSummary.length() > 0 ? deviceSummary : "none");
         if (!summary.equals(lastInputDeviceSummary)) {
             lastInputDeviceSummary = summary;
             Log.i(TAG, "BARONY_ANDROID_INPUT_DEVICE_SCAN " + summary);
         }
-        return physicalControllerFound;
+        if (physicalControllerFound) {
+            return PHYSICAL_INPUT_GAMEPAD;
+        }
+        return externalKeyboardFound && externalMouseFound
+                ? PHYSICAL_INPUT_KEYBOARD_MOUSE
+                : PHYSICAL_INPUT_NONE;
     }
 
     private static String sanitizeDeviceName(String name) {
@@ -404,6 +532,13 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
                 KeyEvent.KEYCODE_BUTTON_START);
         addKeyPill("RB", left + width * 0.68f, top + height * 0.10f, pillRadius,
                 KeyEvent.KEYCODE_BUTTON_R1);
+        // The triggers switch the inventory to the spell list (LT) and the
+        // skill sheet (RT). They sit inward of the bumpers so the item tooltip
+        // beside the inventory grid stays clear.
+        addAxisPill("LT", left + width * 0.38f, top + height * 0.25f, pillRadius,
+                AXIS_LEFT_TRIGGER);
+        addAxisPill("RT", left + width * 0.62f, top + height * 0.25f, pillRadius,
+                AXIS_RIGHT_TRIGGER);
     }
 
     private void buildGameplayLayout(float left, float top, float width, float height,
@@ -574,6 +709,10 @@ final class TouchControlsView extends View implements InputManager.InputDeviceLi
         }
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+                // Mouse clicks always belong to Barony's own cursor input.
+                if (event.getToolType(event.getActionIndex()) == MotionEvent.TOOL_TYPE_MOUSE) {
+                    return false;
+                }
                 // Declining an unmatched initial pointer lets SDL's view below
                 // this overlay receive Barony's existing finger UI events.
                 return handlePointerDown(event, event.getActionIndex());

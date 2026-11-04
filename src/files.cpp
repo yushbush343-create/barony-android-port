@@ -48,7 +48,7 @@ ConsoleVariable<int> cvar_forceHoliday("/force_holiday", 0);
 ConsoleVariable<bool> cvar_disableHoliday("/disable_holiday", false);
 #endif
 
-HolidayTheme getCurrentHoliday(bool force) {
+static HolidayTheme getScheduledHoliday(bool force) {
 #ifdef EDITOR
     return HolidayTheme::THEME_NONE;
 #else
@@ -76,6 +76,39 @@ HolidayTheme getCurrentHoliday(bool force) {
         return HolidayTheme::THEME_NONE;
     }
 #endif
+}
+
+#ifdef ANDROID
+// Owned-data archives may omit the optional holiday themes. Treat a missing
+// theme folder as "no holiday" instead of failing to mount it at startup.
+static bool androidHolidayThemeInstalled(HolidayTheme holiday) {
+    static bool checked[HolidayTheme::THEME_MAX] = { false };
+    static bool installed[HolidayTheme::THEME_MAX] = { false };
+    if (!checked[holiday]) {
+        if (!datadir[0]) {
+            return false;
+        }
+        checked[holiday] = true;
+        const std::string path = std::string(datadir) + "/" + holidayThemeDirs[holiday];
+        struct stat info;
+        installed[holiday] = stat(path.c_str(), &info) == 0 && S_ISDIR(info.st_mode);
+        printlog("[Holiday]: theme folder %s is %s", path.c_str(),
+            installed[holiday] ? "installed" : "missing, holiday theme disabled");
+        SDL_Log("BARONY_ANDROID_HOLIDAY_THEME theme=%s status=%s", holidayThemeDirs[holiday],
+            installed[holiday] ? "installed" : "missing");
+    }
+    return installed[holiday];
+}
+#endif
+
+HolidayTheme getCurrentHoliday(bool force) {
+    const HolidayTheme holiday = getScheduledHoliday(force);
+#ifdef ANDROID
+    if (holiday != HolidayTheme::THEME_NONE && !androidHolidayThemeInstalled(holiday)) {
+        return HolidayTheme::THEME_NONE;
+    }
+#endif
+    return holiday;
 }
 
 bool isCurrentHoliday(bool force) {
@@ -3940,7 +3973,7 @@ bool physfsSearchModelsToUpdate()
 		if ( PHYSFS_getRealDir(name) != NULL )
 		{
 			std::string modelRealDir = PHYSFS_getRealDir(name);
-			if ( modelRealDir.compare("./") != 0 )
+			if ( modelRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				FileIO::close(fp);
 				return true;
@@ -3992,7 +4025,7 @@ bool physfsModelIndexUpdate(int &start, int &end)
 			continue;
 		}
 		std::string modelPath = PHYSFS_getRealDir(modelName);
-		if ( modelHasBeenModified || modelPath.compare("./") != 0 )
+		if ( modelHasBeenModified || modelPath.compare(BASE_DATA_REAL_DIR) != 0 )
 		{
 			if ( !modelHasBeenModified )
 			{
@@ -4001,7 +4034,7 @@ bool physfsModelIndexUpdate(int &start, int &end)
 			}
 			else
 			{
-				if ( modelPath.compare("./") == 0 )
+				if ( modelPath.compare(BASE_DATA_REAL_DIR) == 0 )
 				{
 					// model returned to base directory, remove from the modified index list.
 					Mods::modelsListModifiedIndexes.erase(it);
@@ -5336,7 +5369,7 @@ bool physfsSearchSoundsToUpdate()
 		return false;
 	}
 	std::string soundsDirectory = PHYSFS_getRealDir("sound/sounds.txt");
-	if ( soundsDirectory.compare("./") != 0 )
+	if ( soundsDirectory.compare(BASE_DATA_REAL_DIR) != 0 )
 	{
 		return true;
 	}
@@ -5350,7 +5383,7 @@ bool physfsSearchSoundsToUpdate()
 		if ( PHYSFS_getRealDir(name) != NULL )
 		{
 			std::string soundRealDir = PHYSFS_getRealDir(name);
-			if ( soundRealDir.compare("./") != 0 )
+			if ( soundRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				FileIO::close(fp);
 				return true;
@@ -5419,7 +5452,7 @@ void physfsReloadSounds(bool reloadAll)
 		if ( PHYSFS_getRealDir(name) != NULL )
 		{
 			std::string soundRealDir = PHYSFS_getRealDir(name);
-			if ( soundHasBeenModified || reloadAll || soundRealDir.compare("./") != 0 )
+			if ( soundHasBeenModified || reloadAll || soundRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				std::string soundFile = soundRealDir;
 				soundFile.append(PHYSFS_getDirSeparator()).append(name);
@@ -5431,7 +5464,7 @@ void physfsReloadSounds(bool reloadAll)
 				}
 				else
 				{
-					if ( soundRealDir.compare("./") == 0 )
+					if ( soundRealDir.compare(BASE_DATA_REAL_DIR) == 0 )
 					{
 						// model returned to base directory, remove from the modified index list.
 						Mods::soundsListModifiedIndexes.erase(it);
@@ -5489,7 +5522,7 @@ bool physfsSearchSpritesToUpdate() //TODO: NX PORT: Any changes needed here?
 		if ( PHYSFS_getRealDir(name) != nullptr )
 		{
 			std::string spritesRealDir = PHYSFS_getRealDir(name);
-			if ( spritesRealDir.compare("./") != 0 )
+			if ( spritesRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				FileIO::close(fp);
 				printlog("[PhysFS]: Found modified sprite in sprites/ directory, reloading all sprites...");
@@ -5529,7 +5562,7 @@ void physfsReloadSprites(bool reloadAll) //TODO: NX PORT: Any changes needed her
 		if ( PHYSFS_getRealDir(name) != nullptr )
 		{
 			std::string spritesRealDir = PHYSFS_getRealDir(name);
-			if ( reloadAll || spritesRealDir.compare("./") != 0 )
+			if ( reloadAll || spritesRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				std::string spriteFile = spritesRealDir;
 				spriteFile.append(PHYSFS_getDirSeparator()).append(name);
@@ -5581,7 +5614,7 @@ bool physfsSearchTilesToUpdate()
 		if ( PHYSFS_getRealDir(name) != NULL )
 		{
 			std::string tileRealDir = PHYSFS_getRealDir(name);
-			if ( tileRealDir.compare("./") != 0 )
+			if ( tileRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				FileIO::close(fp);
 				printlog("[PhysFS]: Found modified tile in tiles/ directory, reloading all tiles...");
@@ -5616,7 +5649,7 @@ void physfsReloadTiles(bool reloadAll)
                 if ( PHYSFS_getRealDir(name) != NULL )
                 {
                     std::string tileRealDir = PHYSFS_getRealDir(name);
-                    if ( reloadAll || tileRealDir.compare("./") != 0 )
+                    if ( reloadAll || tileRealDir.compare(BASE_DATA_REAL_DIR) != 0 )
                     {
                         std::string tileFile = tileRealDir;
                         tileFile.append(PHYSFS_getDirSeparator()).append(name);
@@ -5707,7 +5740,7 @@ void physfsReloadTiles(bool reloadAll)
 bool physfsIsMapLevelListModded()
 {
 	std::string mapsDirectory = PHYSFS_getRealDir(LEVELSFILE);
-	if ( mapsDirectory.compare("./") != 0 )
+	if ( mapsDirectory.compare(BASE_DATA_REAL_DIR) != 0 )
 	{
 		//return true;
 	}
@@ -5753,7 +5786,7 @@ bool physfsIsMapLevelListModded()
 			/*if ( PHYSFS_getRealDir(mapName.c_str()) != NULL )
 			{
 				mapsDirectory = PHYSFS_getRealDir(mapName.c_str());
-				if ( mapsDirectory.compare("./") != 0 )
+				if ( mapsDirectory.compare(BASE_DATA_REAL_DIR) != 0 )
 				{
 					return true;
 				}
@@ -5763,7 +5796,7 @@ bool physfsIsMapLevelListModded()
 	}
 
 	mapsDirectory = PHYSFS_getRealDir(SECRETLEVELSFILE);
-	if ( mapsDirectory.compare("./") != 0 )
+	if ( mapsDirectory.compare(BASE_DATA_REAL_DIR) != 0 )
 	{
 		//return true;
 	}
@@ -5809,7 +5842,7 @@ bool physfsIsMapLevelListModded()
 			/*if ( PHYSFS_getRealDir(mapName.c_str()) != NULL )
 			{
 				mapsDirectory = PHYSFS_getRealDir(mapName.c_str());
-				if ( mapsDirectory.compare("./") != 0 )
+				if ( mapsDirectory.compare(BASE_DATA_REAL_DIR) != 0 )
 				{
 					return true;
 				}
@@ -5832,7 +5865,7 @@ bool physfsSearchItemSpritesToUpdate()
 			if ( PHYSFS_getRealDir(string->data) != NULL )
 			{
 				itemImgDir = PHYSFS_getRealDir(string->data);
-				if ( itemImgDir.compare("./") != 0 )
+				if ( itemImgDir.compare(BASE_DATA_REAL_DIR) != 0 )
 				{
 					printlog("[PhysFS]: Found modified item sprite in items/items.txt file, reloading all item sprites...");
 					return true;
@@ -5858,7 +5891,7 @@ void physfsReloadItemSprites(bool reloadAll)
 				if ( PHYSFS_getRealDir(string->data) != NULL )
 				{
 					itemImgDir = PHYSFS_getRealDir(string->data);
-					if ( itemImgDir.compare("./") != 0 )
+					if ( itemImgDir.compare(BASE_DATA_REAL_DIR) != 0 )
 					{
 						reloadImg = true;
 					}
@@ -5927,7 +5960,7 @@ bool physfsSearchMonsterLimbFilesToUpdate()
 			continue;
 		}
 		std::string limbsDir = PHYSFS_getRealDir(filename);
-		if ( limbsDir.compare("./") != 0 )
+		if ( limbsDir.compare(BASE_DATA_REAL_DIR) != 0 )
 		{
 			printlog("[PhysFS]: Found modified limbs.txt file for monster %s, reloading all limb information...", monstertypename[c]);
 			requiresUpdate = true;
@@ -6020,7 +6053,7 @@ bool physfsSearchSystemImagesToUpdate()
 		if ( PHYSFS_getRealDir(imgFile.c_str()) != NULL)
 		{
 			std::string imgDir = PHYSFS_getRealDir(imgFile.c_str());
-			if ( imgDir.compare("./") != 0 )
+			if ( imgDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				printlog("[PhysFS]: Found modified %s file, reloading system image...", imgFile.c_str());
 				requireReload = true;

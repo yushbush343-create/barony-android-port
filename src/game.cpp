@@ -6589,6 +6589,28 @@ void drawAllPlayerCameras() {
         // setup a graphics frame
         beginGraphics();
 
+#ifdef ANDROID
+		{
+			// Log the local split-screen layout whenever it changes.
+			char layout[256];
+			int length = snprintf(layout, sizeof(layout), "split=%d client=%d players=%d",
+				splitscreen ? 1 : 0, clientnum, playercount);
+			for (int c = 0; c < MAXPLAYERS && length > 0 && length < (int)sizeof(layout); ++c)
+			{
+				const auto& cam = players[c]->camera();
+				length += snprintf(layout + length, sizeof(layout) - length,
+					" p%d=%s:%d,%d,%dx%d", c, client_disconnected[c] ? "off" : "on",
+					cam.winx, cam.winy, cam.winw, cam.winh);
+			}
+			static std::string lastLayout;
+			if (lastLayout != layout)
+			{
+				lastLayout = layout;
+				SDL_Log("BARONY_ANDROID_SPLITSCREEN_LAYOUT %s", layout);
+			}
+		}
+#endif
+
 		//int maximum = splitscreen ? MAXPLAYERS : 1;
 		for (int c = 0; c < MAXPLAYERS; ++c)
 		{
@@ -7195,9 +7217,14 @@ int main(int argc, char** argv)
 		//SDL_Surface *sky_bmp;
 		light_t* light;
 
+#ifdef ANDROID
+		// BASE_DATA_DIR is datadir itself here; -datadir supplies the path.
+		size_t datadirsz = 0;
+#else
 		size_t datadirsz = std::min(sizeof(datadir) - 1, strlen(BASE_DATA_DIR));
 		strncpy(datadir, BASE_DATA_DIR, datadirsz);
 		datadir[datadirsz] = '\0';
+#endif
 #ifdef WINDOWS
 		strcpy(outputdir, "./");
 #else
@@ -7716,7 +7743,10 @@ int main(int argc, char** argv)
 							glDrawWorld(&menucam, REALCOLORS);
 							drawEntities3D(&menucam, REALCOLORS);
 							glEndCamera(&menucam, true, map);
-							list_RemoveNode(light->node);
+							if ( light )
+							{
+								list_RemoveNode(light->node);
+							}
 						}
 
 						MainMenu::doMainMenu(!intro);

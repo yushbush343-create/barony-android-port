@@ -10,15 +10,25 @@ The APK is code-only. It does not contain the commercial Barony game data, so ev
 - 64-bit ARM device (`arm64-v8a`).
 - OpenGL ES 3.0 or newer.
 - Landscape orientation.
-- Offline single-player and experimental direct LAN multiplayer.
-- Physical gamepad, mouse and keyboard, or on-screen touch controls.
+- Phones, tablets, and 64-bit Android TV / Google TV devices.
+- Offline single-player, local split-screen co-op for up to four players, and
+  experimental direct LAN multiplayer.
+- Physical gamepad, mouse and keyboard, on-screen touch controls, or a TV
+  remote for menus.
 
-The port has been tested on a Samsung Galaxy S24 Ultra / Adreno 750 with a
-GameSir G8 controller. Affected-device testers also confirmed the mobile
-framebuffer compatibility path on a Galaxy Note 9 / Mali-G72 and a
-Poco F7 / Adreno 825.
+Beta 8 and earlier were tested on a Samsung Galaxy S24 Ultra / Adreno 750
+with a GameSir G8 controller. Affected-device testers also confirmed the
+mobile framebuffer compatibility path on a Galaxy Note 9 / Mali-G72 and a
+Poco F7 / Adreno 825. Beta 9 through Beta 11 were verified on an Android 15
+phone emulator, and Beta 11's TV support on an Android 16 Google TV emulator,
+including the ARM64 build under ARM translation. Reports from physical phones,
+tablets, and TVs are especially welcome.
 
 ## Install a release
+
+For a short, beginner-friendly walkthrough, see
+[GETTING-STARTED.md](GETTING-STARTED.md). This section covers the same steps
+in more detail.
 
 You need:
 
@@ -33,7 +43,7 @@ release notes describe your device or problem.
 Verify the APK before installing it:
 
 ```powershell
-$apk = '.\Barony-Android-Port-5.0.2-android-beta8-arm64-v8a.apk'
+$apk = '.\Barony-Android-Port-5.0.2-android-beta11-arm64-v8a.apk'
 (Get-FileHash $apk -Algorithm SHA256).Hash.ToLowerInvariant()
 Get-Content "$apk.sha256"
 ```
@@ -66,6 +76,13 @@ Barony-Android-Data-5.0.2.zip.sha256
 
 Use `-SourcePath <path>` if Barony is installed somewhere else and
 `-OutputPath <file.zip>` to select another destination.
+
+Barony's seasonal themes (Halloween from October 1 to November 1, and the
+winter holidays from December 1 to January 1) are optional. Without them, the
+game starts with its normal look during those dates. To keep the seasonal
+textures, music, and lighting, add `-IncludeHolidayThemes`; this adds about
+170 MB to the archive. Barony's **Festive Content** setting can still turn the
+theme off on the device.
 
 Copy the ZIP to the Android device without extracting it. Start
 **Barony Android Port**, select **Import archive**, and choose the ZIP with
@@ -142,14 +159,15 @@ Unblock-File .\Barony-Android-Data-Installer-5.0.2.ps1
 
 The script finds the default Windows Steam installation, validates v5.0.2,
 copies only the required data, and creates the same manifest. Use
-`-SourcePath <path>` when Barony is installed elsewhere and
-`-Serial <adb-serial>` when more than one Android target is connected.
+`-SourcePath <path>` when Barony is installed elsewhere,
+`-Serial <adb-serial>` when more than one Android target is connected, and
+`-IncludeHolidayThemes` to also copy the optional seasonal themes.
 
 You can also install or update the APK through ADB:
 
 ```powershell
 $adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-$apk = '.\Barony-Android-Port-5.0.2-android-beta8-arm64-v8a.apk'
+$apk = '.\Barony-Android-Port-5.0.2-android-beta11-arm64-v8a.apk'
 & $adb devices
 & $adb install -r $apk
 ```
@@ -169,10 +187,11 @@ To enable owned DLC, download the Beta 5 archive builder, create a new
 owned-data ZIP, and import it through **Data & Saves**. Archives created with
 the Beta 4 builder do not contain the DLC entitlement transfer file.
 
-Beta 8 can be installed directly over Beta 5, Beta 6, Beta 7, or the
+Beta 11 can be installed directly over Beta 5 through Beta 10, or the
 adaptive-HDR test build. Existing owned data, DLC entitlements, saves, and
 settings remain compatible, so the archive does not need to be rebuilt for
-this update.
+this update. Rebuild it with `-IncludeHolidayThemes` only if you want the
+optional seasonal themes.
 
 From the root Barony main menu, select **Data & Saves**:
 
@@ -185,6 +204,20 @@ From the root Barony main menu, select **Data & Saves**:
 Save imports reject traversal paths, unexpected files, manifest mismatches,
 modified payloads, more than 512 files, and payloads larger than 64 MiB.
 
+To bring saves from a Windows PC, run the archive builder (Beta 12 or newer)
+with `-Saves`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Barony-Android-Data-Archive-Builder-5.0.2.ps1 -Saves
+```
+
+It packs the installation's `savegames\` and `config\` folders into
+`Barony-Android-Saves-from-PC.zip` in the same format as
+**Export saves and settings**, so **Import saves and settings** and
+**Receive from PC** both accept it. Add `-NoConfig` to leave out the settings.
+Imported files replace files with the same names on the device; other saves
+stay. Android keeps its own render-resolution and frame-rate presets.
+
 Barony uses one-shot checkpoints. Loading an adventure consumes its current checkpoint, and the replacement checkpoint is written at a later dungeon-level boundary. Do not test save persistence by loading a valuable adventure and immediately quitting to the main menu.
 
 ## Controls
@@ -195,9 +228,104 @@ Without a gamepad, the port selects one of three touch layouts automatically:
 
 - **Menu:** D-pad and compact face/shoulder buttons, with direct menu tapping.
 - **Gameplay:** floating movement and camera zones plus nearby action controls.
-- **Inventory/UI:** centered navigation controls with direct inventory and interface tapping.
+- **Inventory/UI:** centered navigation controls with direct inventory and
+  interface tapping. **LT** opens the spell list and **RT** opens the skill
+  sheet.
 
-Mouse and keyboard input are also supported through Android.
+Mouse and keyboard input are also supported through Android. Connecting both an
+external keyboard and an external mouse (for example over Bluetooth) hides the
+touch overlay, just like a gamepad; disconnecting either one restores it. Mouse
+clicks always go to the game, never to on-screen buttons.
+
+Local split-screen co-op works with up to four gamepads: choose
+**Local Adventure** and have each player press **A** to join. The screen splits
+top and bottom for two players and into quarters for three or four; Barony's
+**Vertical Splitscreen** setting puts two players side by side. If several
+views run slowly, lower **Render Resolution** to 720p.
+
+## Android TV and Google TV
+
+For a beginner-friendly walkthrough, see [TV.md](TV.md). TV devices need a
+64-bit (`arm64-v8a`) system; many streaming sticks, including Chromecast with
+Google TV, run a 32-bit system and can't install the port.
+
+The app appears in the TV's app list with a banner. On a TV, the touch overlay
+is hidden and the remote drives Barony's menus: the arrows move, **OK**
+selects, **Back** cancels, and **Menu** opens the pause menu. With a gamepad
+connected, the gamepad takes over and the remote's **Back** acts as Escape.
+
+Many TVs ship without Android's document picker, so on a TV the first-run data
+screen offers **Receive from PC** instead of **Import archive**, and
+**Data & Saves** lists only **Receive from PC (Wi-Fi)** and **Remove mods**.
+Game data, mods, and save backups exported on a phone or tablet all arrive
+through **Receive from PC**.
+
+## Receive from PC
+
+**Receive from PC (Wi-Fi)** in **Data & Saves**, and on the first-run data
+screen on a TV, receives one ZIP from a web browser on another device on the
+same local network. It accepts owned-data archives, mod archives, and save
+backups, recognizes which kind was sent, and hands it to the same validation
+and import path as the document picker.
+
+The device shows an `http://<address>:8765` URL and a 6-digit code. Safeguards:
+
+- It listens only while the receive screen is shown, and stops after one
+  successful transfer, **Cancel**, leaving the app, or five wrong codes.
+- Every upload must carry the code shown on the screen.
+- It accepts connections only from private, link-local, and loopback
+  addresses.
+- It accepts only `.zip` files that start with a ZIP signature, up to 2 GB.
+- Interrupted or rejected uploads are deleted.
+- It uses the existing networking permission from LAN multiplayer and requests
+  no new permission.
+
+Router client isolation or guest networks can block the connection, as for
+LAN play.
+
+## Mods and translations
+
+Barony's own mod menu works on Android: choose **Play Modded Game**, select
+**Load Mod** for each mod you want, then **Start Modded Game**. Community
+translations are ordinary mods and work the same way. For a beginner-friendly
+walkthrough, see [MODS.md](MODS.md).
+
+Mods live in the app's private storage, so they are installed from a ZIP:
+
+1. Get a mod ZIP:
+   - **Steam Workshop or local PC mods:** subscribe to mods in Barony's Steam
+     Workshop (or put them in `Barony\mods` on the PC), then run the archive
+     builder with `-Mods`:
+
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File .\Barony-Android-Data-Archive-Builder-5.0.2.ps1 -Mods
+     ```
+
+     It creates `Barony-Android-Mods.zip` with every subscribed and local mod.
+     Workshop mods are named after their Workshop titles, which the builder
+     looks up through Steam's public web API (only the item IDs are sent).
+     Add `-NoWorkshopTitles` to skip the lookup, or `-ModName "Title*"` to
+     include only matching mods (separate several names with commas).
+   - **A mod downloaded as a ZIP:** use it directly. The ZIP may contain the
+     mod's files at its root (the mod is named after the ZIP file) or one or
+     more mod folders.
+2. Copy the ZIP to the device. On Barony's main menu, open **Data & Saves**,
+   choose **Import mods**, and pick the ZIP.
+3. Choose **Exit now**, then open the port again. The mods are installed before
+   Barony starts.
+
+To uninstall mods, use **Data & Saves** > **Remove mods**, then exit and reopen
+the port.
+
+Notes:
+
+- One import may contain up to 2 GB of mods, with no single file larger than
+  256 MB.
+- Barony keeps modded runs separate: they use their own save files and mark
+  the run as modded.
+- For LAN games, every player must load the same mods by hand.
+- Browsing and subscribing to the Steam Workshop isn't available on the device.
+- Mods belong to their authors. Keep the generated ZIP for your own devices.
 
 ## Experimental LAN multiplayer
 
@@ -238,15 +366,17 @@ and include the device model, GPU, Android version, port build, owned-data
 version, selected render/FPS preset, and exact reproduction steps. Recent
 `BARONY_ANDROID_*` log markers are useful when available.
 
-Never attach owned game-data archives, DLC entitlement files, Steam
-configuration, credentials, or other private commercial data to an issue.
+Never attach owned game-data archives, mod archives, DLC entitlement files,
+Steam configuration, credentials, or other private commercial data to an
+issue.
 
 ## Current limitations
 
 - Offline single-player remains the most broadly tested mode; direct LAN
   multiplayer is experimental.
-- Internet matchmaking, Steamworks, EOS, PlayFab, achievements, workshop
-  integration, and voice chat are disabled.
+- Internet matchmaking, Steamworks, EOS, PlayFab, achievements, in-app Steam
+  Workshop browsing, and voice chat are disabled. Mods are installed from ZIP
+  archives instead (see [Mods and translations](#mods-and-translations)).
 - Controller glyph selection has not been verified across a broad range of controller models.
 - Steam DLC entitlement transfer depends on a locally cached Steam app ticket;
   launch the PC version once before rebuilding the data archive if an owned pack
@@ -256,6 +386,15 @@ configuration, credentials, or other private commercial data to an issue.
 - Creating a validated owned-data archive currently requires Windows and
   PowerShell. Importing it on Android does not require ADB.
 - Touch layout customization, haptics, and left-handed presets are not implemented.
+- Barony reads some mod data files into fixed-size buffers, so a mod with an
+  unusually large data file may load only partly. Barony logs a JSON error
+  and skips that file, as on desktop.
+- Android TV support and local split-screen co-op have been tested on
+  emulators only so far.
+- On a TV, saves can be received but not exported, because the export uses
+  the document picker.
+- **Receive from PC** sends files over plain HTTP on the local network. Use it
+  on a network you trust, such as your home Wi-Fi.
 
 ## Build from source
 
@@ -326,8 +465,12 @@ Create a validated owned-data archive directly from a source checkout:
 ```
 
 Pass `-SourcePath` for a non-default Steam/GOG installation and `-OutputPath`
-to choose the ZIP destination. Generated owned-data archives are private user
-artifacts and must never be committed or attached to a public release.
+to choose the ZIP destination. Add `-IncludeHolidayThemes` to include the
+optional seasonal themes. `-Mods` builds a mod archive instead (see
+[Mods and translations](#mods-and-translations)), and `-Saves` a save archive
+(see [Updating and saves](#updating-and-saves)). Generated owned-data, mod,
+and save archives are private user artifacts and must never be committed or
+attached to a public release.
 
 ## Physical-device regression
 
@@ -390,7 +533,7 @@ Back up the generated keystore and password securely. Losing the signing key pre
 Build and verify a signed release:
 
 ```powershell
-.\tools\build-release.ps1 -Clean -VersionName 5.0.2-android-beta8 -VersionCode 15000222
+.\tools\build-release.ps1 -Clean -VersionName 5.0.2-android-beta11 -VersionCode 15000225
 ```
 
 Use a unique version name and a version code greater than every previously

@@ -11,19 +11,24 @@ based on the official Barony v5.0.2 source at
 
 The Android package contains engine code and open-source dependency notices only. It does not contain Barony maps, models, music, sounds, DLC, or other commercial game data. A purchased Barony v5.0.2 PC installation is required.
 
+**New to the port? Follow the step-by-step [Getting started guide](GETTING-STARTED.md).**
+To add mods or translations, see the [mods guide](MODS.md). To play on a TV,
+see the [TV guide](TV.md).
+
 Download the APK and owned-data archive builder from the
 [GitHub releases page](https://github.com/DifferentNet/barony-android-port/releases).
 The current normal prerelease is
-[Barony Android Port 5.0.2 Beta 8](https://github.com/DifferentNet/barony-android-port/releases/tag/5.0.2-android-beta8).
+[Barony Android Port 5.0.2 Beta 11](https://github.com/DifferentNet/barony-android-port/releases/tag/5.0.2-android-beta11).
 Run the builder on a Windows PC with an owned Steam or GOG Barony v5.0.2
 installation, copy the generated ZIP to the Android device, then select
-**Import archive** when the port starts. The ZIP remains the user's private
+**Import archive** when the port starts. On a TV, select **Receive from PC**
+and send the ZIP from a PC browser instead. The ZIP remains the user's private
 commercial data and must not be shared.
 
 Beta 4 users who want to enable owned DLC must download the archive builder
 from Beta 5 or newer, create a new owned-data ZIP, and import it through
 **Data & Saves**. Archives created with the older builder do not contain the
-DLC entitlement transfer file. Beta 5 archives remain compatible with Beta 8
+DLC entitlement transfer file. Beta 5 archives remain compatible with Beta 11
 and do not need to be rebuilt.
 
 See [ANDROID.md](ANDROID.md) for checksum verification, installation
@@ -41,7 +46,8 @@ including touch controls and physical-controller support.
 - Native `arm64-v8a` build for Android 8.0 and newer.
 - OpenGL ES 3 rendering.
 - Offline single-player gameplay and experimental direct LAN multiplayer.
-- Physical gamepads and automatic on-screen touch controls.
+- Physical gamepads, Bluetooth or USB keyboard and mouse, and automatic
+  on-screen touch controls.
 - 720p, 1080p, and native 3D render-resolution presets with native-resolution
   menus and text.
 - 60, 90, and 120 FPS limits.
@@ -50,12 +56,22 @@ including touch controls and physical-controller support.
 - In-app import of validated owned-data ZIP archives.
 - Owned DLC entitlement transfer from Steam cached app tickets or GOG/DRM-free
   license keys.
-- Portable save/settings export and import from the main menu.
+- Portable save/settings export and import from the main menu, and PC save
+  transfer with the archive builder's `-Saves` option.
+- Optional Halloween and winter-holiday themes.
+- Up to four-player local split-screen co-op with gamepads.
+- Android TV and Google TV support with remote navigation
+  ([TV guide](TV.md)).
+- **Receive from PC:** send game data, mods, or saves from a web browser over
+  Wi-Fi, no cable or file manager needed.
+- Mods and translations through Barony's mod menu, installed from Steam
+  Workshop subscriptions or mod ZIPs via **Data & Saves**
+  ([mods guide](MODS.md)).
 
 Direct LAN hosting, discovery, and joining are available on the same local
 network. Internet matchmaking and multiplayer services, Steamworks, EOS,
-PlayFab, achievements, workshop integration, and public-store packaging are
-not currently supported.
+PlayFab, achievements, in-app Steam Workshop browsing, and public-store
+packaging are not currently supported.
 
 GPU compatibility testing is ongoing. Use the normal beta for general testing;
 focused prereleases on the releases page are intended for the affected devices

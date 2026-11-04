@@ -1019,11 +1019,9 @@ void sound_update(int player, int index, int numplayers)
 
 	FMOD_VECTOR position;
 
-	auto& camera = cameras[index];
-	if ( splitscreen )
-	{
-		camera = cameras[0];
-	}
+	// OpenAL has a single listener, so split-screen uses the first player's
+	// camera. Read it without copying it over the other players' cameras.
+	const view_t& camera = splitscreen ? cameras[0] : cameras[index];
 
 	position.x = -camera.y;
 	position.y = -camera.z / 32;
@@ -1622,7 +1620,7 @@ bool physfsSearchMusicToUpdate_helper_findModifiedMusic(uint32_t numMusic, const
 		if ( PHYSFS_getRealDir(tempstr) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(tempstr);
-			if ( musicDir.compare("./") != 0 )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				printlog("[PhysFS]: Found modified music in music/ directory, reloading music files...");
 				return true;
@@ -1751,7 +1749,7 @@ bool physfsSearchMusicToUpdate()
 		if ( PHYSFS_getRealDir(filename.c_str()) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(filename.c_str());
-			if ( musicDir.compare("./") != 0 )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				printlog("[PhysFS]: Found modified music in music/ directory, reloading music files...");
 				return true;
@@ -1788,7 +1786,7 @@ bool physfsSearchMusicToUpdate()
 		if ( PHYSFS_getRealDir(tempstr) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(tempstr);
-			if ( musicDir.compare("./") != 0 )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 )
 			{
 				printlog("[PhysFS]: Found modified music in music/ directory, reloading music files...");
 				return true;
@@ -1808,7 +1806,7 @@ FMOD_RESULT physfsReloadMusic_helper_reloadMusicArray(uint32_t numMusic, const c
 		if ( PHYSFS_getRealDir(tempstr) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(tempstr);
-			if ( musicDir.compare("./") != 0 || reloadAll )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 || reloadAll )
 			{
 				musicDir.append(PHYSFS_getDirSeparator()).append(tempstr);
 				printlog("[PhysFS]: Loading music file %s...", tempstr);
@@ -1923,7 +1921,7 @@ void physfsReloadMusic(bool &introMusicChanged, bool reloadAll) //TODO: This sho
 		if ( PHYSFS_getRealDir(filename.c_str()) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(filename.c_str());
-			if ( musicDir.compare("./") != 0 || reloadAll )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 || reloadAll )
 			{
 				musicDir += PHYSFS_getDirSeparator() + filename;
 				printlog("[PhysFS]: Loading music file %s...", filename.c_str());
@@ -2394,7 +2392,7 @@ void physfsReloadMusic(bool &introMusicChanged, bool reloadAll) //TODO: This sho
 		if ( PHYSFS_getRealDir(tempstr) != nullptr )
 		{
 			std::string musicDir = PHYSFS_getRealDir(tempstr);
-			if ( musicDir.compare("./") != 0 || reloadAll )
+			if ( musicDir.compare(BASE_DATA_REAL_DIR) != 0 || reloadAll )
 			{
 				musicDir.append(PHYSFS_getDirSeparator()).append(tempstr);
 				printlog("[PhysFS]: Loading music file %s...", tempstr);
