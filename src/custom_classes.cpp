@@ -1,6 +1,5 @@
 #include "main.hpp"
 #include "custom_classes.hpp"
-#include "items.hpp"
 #include "magic/magic.hpp"
 #include "stat.hpp"
 
