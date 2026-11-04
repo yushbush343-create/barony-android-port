@@ -15673,7 +15673,18 @@ std::string Compendium_t::Events_t::formatEventRecordText(Sint32 value, const ch
 						std::string tmp;
 #ifndef EDITOR
 						const CustomClass* customClass = CustomClassManager::getClass(formatVal);
-						tmp = customClass ? customClass->displayName : playerClassLangEntry(formatVal, 0);
+						if ( customClass )
+						{
+							tmp = customClass->displayName;
+						}
+						else if ( formatVal >= 0 && formatVal < NUMCLASSES )
+						{
+							tmp = playerClassLangEntry(formatVal, 0);
+						}
+						else
+						{
+							tmp = "Unknown Class";
+						}
 #else
 						tmp = playerClassLangEntry(formatVal, 0);
 #endif
