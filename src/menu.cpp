@@ -9532,7 +9532,10 @@ void doNewGame(bool makeHighscore) {
 	}
 
 	// spice of life achievement
-	usedClass[client_classes[clientnum]] = true;
+	if ( client_classes[clientnum] >= 0 && client_classes[clientnum] < NUMCLASSES )
+	{
+		usedClass[client_classes[clientnum]] = true;
+	}
 	bool usedAllClasses = true;
 	for ( int c = 0; c <= CLASS_MONK; c++ )
 	{
