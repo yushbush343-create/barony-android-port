@@ -761,8 +761,7 @@ void initClass(const int player)
 	players[player]->magic.spellList.last = nullptr;
 
 
-	// CLASS LOADOUTS
-	// CUSTOM CLASS LOADOUTS
+	// CUSTOM CLASS STAT MODIFIERS
 	if ( CustomClassManager::isCustomClassId(client_classes[player]) )
 	{
 		const CustomClass* customClass = CustomClassManager::getClass(client_classes[player]);
