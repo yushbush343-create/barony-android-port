@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#include "custom_classes.hpp"
 
 #include <memory>
 #include <ctime>
@@ -231,6 +232,9 @@ int initApp(char const * const title, int fullscreen)
     if (!mountBaseDataFolders()) {
         return 13;
     }
+
+    // Classes must be available in character creation, before initGameDatafiles().
+    CustomClassManager::init();
 
 	// load default language file (english)
 	Language::languageCode = "en";
