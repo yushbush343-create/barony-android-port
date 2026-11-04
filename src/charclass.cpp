@@ -767,12 +767,6 @@ void initClass(const int player)
 	{
 		const CustomClass* customClass = CustomClassManager::getClass(client_classes[player]);
 
-		if ( !isLocalPlayer && multiplayer == CLIENT && intro == false )
-		{
-			// Don't create starting items for remote players we don't own.
-			return;
-		}
-
 		if ( customClass )
 		{
 			initClassStats(client_classes[player], stats[player]);
