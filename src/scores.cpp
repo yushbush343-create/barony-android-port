@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#include "custom_classes.hpp"
 #include "files.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -477,7 +478,18 @@ void loadScore(score_t* score)
 	//((stats[0]->appearance & 0xFF00) >> 8);
 	//stats[0]->appearance = (stats[0]->appearance & 0xFF);
 	strcpy(stats[0]->name, score->stats->name);
-	client_classes[0] = score->classnum;
+	if ( score->classnum >= 0 && score->classnum < NUMCLASSES )
+	{
+		client_classes[0] = score->classnum;
+	}
+	else if ( CustomClassManager::isCustomClassId(score->classnum) )
+	{
+		client_classes[0] = score->classnum;
+	}
+	else
+	{
+		client_classes[0] = CLASS_BARBARIAN;
+	}
 	victory = score->victory;
 	currentlevel = score->dungeonlevel;
 
