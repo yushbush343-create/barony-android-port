@@ -1,9 +1,9 @@
 # Custom classes
 
-This fork loads additional character classes from `custom/classes.json`.
-The file is read through PhysicsFS, so a mod ZIP can provide its own file at
-that path. A full Android game build also packages the repository's default
-file in the APK.
+This fork loads additional character classes from `custom/classes.json`
+through PhysicsFS. Full Android game builds package the repository's default
+file in the APK. Changes made in the in-game editor are stored in the writable
+app-data directory at `mods/custom/classes.json` and mounted at startup.
 
 ## Version 2 format
 
