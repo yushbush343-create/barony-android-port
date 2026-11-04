@@ -2593,6 +2593,12 @@ static void handleMainMenu(bool mode)
 			int customClassesDisplayed = 0;
 			for ( const CustomClass& customClass : CustomClassManager::getClasses() )
 			{
+				const bool raceAllowed = std::find(customClass.allowedRaces.begin(),
+					customClass.allowedRaces.end(), stats[0]->playerRace) != customClass.allowedRaces.end();
+				if ( !raceAllowed )
+				{
+					continue;
+				}
 				const int customClassId = NUMCLASSES + customClass.id;
 				if ( isCharacterValidFromDLC(*stats[0], customClassId) == VALID_OK_CHARACTER )
 				{
@@ -2607,6 +2613,10 @@ static void handleMainMenu(bool mode)
 			{
 				displayedClasses.push_back(*it);
 			}
+			// The list can differ from the nominal built-in class count when DLC
+			// restrictions or custom race restrictions remove entries. Use its
+			// actual size for scrolling and indexed access.
+			entriesToDisplay = static_cast<int>(displayedClasses.size());
 
 			const int classListTop = suby1 + 56;
 			const int classListVisibleRows = 23;
