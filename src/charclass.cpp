@@ -3455,7 +3455,7 @@ void initClass(const int player)
 	}
 
 	if ( stats[player]->stat_appearance == 0 
-		&& client_classes[player] <= CLASS_MONK 
+		&& (client_classes[player] <= CLASS_MONK || CustomClassManager::isCustomClassId(client_classes[player])) 
 		&& stats[player]->playerRace != RACE_HUMAN )
 	{
 		if ( isLocalPlayer )
