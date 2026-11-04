@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 namespace
 {
@@ -325,6 +327,225 @@ void CustomClassManager::init()
 
     printlog("[CustomClasses]: Loaded %d custom classes.",
         static_cast<int>(classes.size()));
+}
+
+bool CustomClassManager::save()
+{
+    if ( classes.size() > MAX_CUSTOM_CLASSES )
+    {
+        printlog("[CustomClasses]: Refusing to save more than %d classes.", MAX_CUSTOM_CLASSES);
+        return false;
+    }
+
+    std::vector<CustomClass> normalizedClasses = classes;
+    std::set<int> usedIds;
+    std::set<std::string> usedNames;
+    for ( CustomClass& customClass : normalizedClasses )
+    {
+        if ( customClass.id < 0 || customClass.id > MAX_CUSTOM_CLASS_ID
+            || customClass.internalName.empty() || customClass.internalName.size() > 64
+            || customClass.displayName.size() > 63 || customClass.description.size() > 512
+            || usedIds.find(customClass.id) != usedIds.end()
+            || usedNames.find(customClass.internalName) != usedNames.end()
+            || customClass.maxHP < -30 || customClass.maxHP > 1000
+            || customClass.maxMP < -30 || customClass.maxMP > 1000
+            || customClass.STR < -100 || customClass.STR > 100
+            || customClass.DEX < -100 || customClass.DEX > 100
+            || customClass.CON < -100 || customClass.CON > 100
+            || customClass.INT < -100 || customClass.INT > 100
+            || customClass.PER < -100 || customClass.PER > 100
+            || customClass.CHR < -100 || customClass.CHR > 100
+            || (customClass.proficiencies.size() % 2) != 0)
+        {
+            printlog("[CustomClasses]: Refusing to save invalid class '%s'.",
+                customClass.internalName.c_str());
+            return false;
+        }
+
+        if ( customClass.displayName.empty() )
+        {
+            customClass.displayName = customClass.internalName;
+        }
+        if ( customClass.allowedRaces.empty() )
+        {
+            customClass.allowedRaces.push_back(RACE_HUMAN);
+        }
+
+        for ( int race : customClass.allowedRaces )
+        {
+            if ( race < 0 || race >= RACE_ENUM_END )
+            {
+                printlog("[CustomClasses]: Invalid race ID in '%s'.", customClass.internalName.c_str());
+                return false;
+            }
+        }
+        for ( size_t i = 0; i < customClass.proficiencies.size(); i += 2 )
+        {
+            if ( customClass.proficiencies[i] < 0
+                || customClass.proficiencies[i] >= NUMPROFICIENCIES
+                || customClass.proficiencies[i + 1] < 0
+                || customClass.proficiencies[i + 1] > 100 )
+            {
+                printlog("[CustomClasses]: Invalid proficiency in '%s'.", customClass.internalName.c_str());
+                return false;
+            }
+        }
+        for ( int spell : customClass.startingSpells )
+        {
+            if ( spell < 0 || spell >= NUM_SPELLS )
+            {
+                printlog("[CustomClasses]: Invalid starting spell in '%s'.", customClass.internalName.c_str());
+                return false;
+            }
+        }
+        for ( int item : customClass.startingItems )
+        {
+            if ( item < 0 || item >= NUMITEMS )
+            {
+                printlog("[CustomClasses]: Invalid starting item in '%s'.", customClass.internalName.c_str());
+                return false;
+            }
+        }
+
+        usedIds.insert(customClass.id);
+        usedNames.insert(customClass.internalName);
+    }
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    writer.StartObject();
+    writer.Key("version");
+    writer.Int(2);
+    writer.Key("classes");
+    writer.StartArray();
+    for ( const CustomClass& customClass : normalizedClasses )
+    {
+        writer.StartObject();
+        writer.Key("id");
+        writer.Int(customClass.id);
+        writer.Key("internal_name");
+        writer.String(customClass.internalName.c_str());
+        writer.Key("display_name");
+        writer.String(customClass.displayName.c_str());
+        writer.Key("description");
+        writer.String(customClass.description.c_str());
+        writer.Key("max_hp");
+        writer.Int(customClass.maxHP);
+        writer.Key("max_mp");
+        writer.Int(customClass.maxMP);
+        writer.Key("STR");
+        writer.Int(customClass.STR);
+        writer.Key("DEX");
+        writer.Int(customClass.DEX);
+        writer.Key("CON");
+        writer.Int(customClass.CON);
+        writer.Key("INT");
+        writer.Int(customClass.INT);
+        writer.Key("PER");
+        writer.Int(customClass.PER);
+        writer.Key("CHR");
+        writer.Int(customClass.CHR);
+
+        writer.Key("allowed_races");
+        writer.StartArray();
+        for ( int race : customClass.allowedRaces )
+        {
+            writer.Int(race);
+        }
+        writer.EndArray();
+
+        writer.Key("proficiencies");
+        writer.StartArray();
+        for ( int proficiency : customClass.proficiencies )
+        {
+            writer.Int(proficiency);
+        }
+        writer.EndArray();
+
+        writer.Key("starting_spells");
+        writer.StartArray();
+        for ( int spell : customClass.startingSpells )
+        {
+            writer.Int(spell);
+        }
+        writer.EndArray();
+
+        writer.Key("starting_items");
+        writer.StartArray();
+        for ( int item : customClass.startingItems )
+        {
+            writer.Int(item);
+        }
+        writer.EndArray();
+        writer.EndObject();
+    }
+    writer.EndArray();
+    writer.EndObject();
+
+    PHYSFS_mkdir("custom");
+    PHYSFS_File* file = PHYSFS_openWrite("custom/classes.json");
+    if ( !file )
+    {
+        printlog("[CustomClasses]: Could not open classes.json for writing: %s",
+            PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+        return false;
+    }
+
+    const PHYSFS_sint64 bytesWritten = PHYSFS_writeBytes(file, buffer.GetString(), buffer.GetSize());
+    const bool closed = PHYSFS_close(file);
+    if ( bytesWritten != static_cast<PHYSFS_sint64>(buffer.GetSize()) || !closed )
+    {
+        printlog("[CustomClasses]: Failed to write classes.json completely.");
+        return false;
+    }
+
+    classes = std::move(normalizedClasses);
+    printlog("[CustomClasses]: Saved %d custom classes.", static_cast<int>(classes.size()));
+    return true;
+}
+
+bool CustomClassManager::addOrUpdateClass(const CustomClass& customClass)
+{
+    std::vector<CustomClass> previousClasses = classes;
+    auto it = std::find_if(classes.begin(), classes.end(),
+        [&customClass](const CustomClass& existing) { return existing.id == customClass.id; });
+    if ( it == classes.end() )
+    {
+        if ( classes.size() >= MAX_CUSTOM_CLASSES )
+        {
+            return false;
+        }
+        classes.push_back(customClass);
+    }
+    else
+    {
+        *it = customClass;
+    }
+
+    if ( !save() )
+    {
+        classes = std::move(previousClasses);
+        return false;
+    }
+    return true;
+}
+
+bool CustomClassManager::removeClass(int customId)
+{
+    std::vector<CustomClass> previousClasses = classes;
+    auto it = std::find_if(classes.begin(), classes.end(),
+        [customId](const CustomClass& existing) { return existing.id == customId; });
+    if ( it == classes.end() )
+    {
+        return false;
+    }
+    classes.erase(it);
+    if ( !save() )
+    {
+        classes = std::move(previousClasses);
+        return false;
+    }
+    return true;
 }
 
 const std::vector<CustomClass>& CustomClassManager::getClasses()
