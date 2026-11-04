@@ -75,7 +75,7 @@ namespace
 
     void ensureCustomClassEditorButton()
     {
-        if ( !MainMenu::main_menu_frame
+        if ( !MainMenu::main_menu_frame || MainMenu::isCutsceneActive()
             || MainMenu::main_menu_frame->findButton("customClassEditorLauncher") )
         {
             return;
