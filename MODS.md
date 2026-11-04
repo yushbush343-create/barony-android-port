@@ -82,6 +82,13 @@ After you start a modded game, the game remembers those mods: the next time
 you open **Play Modded Game**, they're already loaded. Leaving the mod menu
 with **Back** unloads them.
 
+## Custom classes in this fork
+
+A mod can add or override custom class definitions by including
+`custom/classes.json` at the mod's root. See the
+[custom class format and limitations](CUSTOM-CLASSES.md) before assigning
+class IDs or distributing saves that use those classes.
+
 ## Translations
 
 Community translations are mods. Subscribe to one in the Steam Workshop, pack
