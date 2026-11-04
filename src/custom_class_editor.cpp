@@ -46,7 +46,6 @@ namespace
         Field* allowedRaces = nullptr;
         Field* proficiencies = nullptr;
         Field* startingSpells = nullptr;
-        Field* startingItems = nullptr;
         Field* status = nullptr;
     };
 
@@ -252,7 +251,6 @@ namespace
             setFieldText(fields.allowedRaces, "");
             setFieldText(fields.proficiencies, "");
             setFieldText(fields.startingSpells, "");
-            setFieldText(fields.startingItems, "");
             if ( fields.id )
             {
                 fields.id->setEditable(true);
@@ -281,7 +279,6 @@ namespace
         setFieldText(fields.allowedRaces, integerListToString(races));
         setFieldText(fields.proficiencies, integerListToString(customClass->proficiencies));
         setFieldText(fields.startingSpells, integerListToString(customClass->startingSpells));
-        setFieldText(fields.startingItems, integerListToString(customClass->startingItems));
         if ( fields.id )
         {
             fields.id->setEditable(false);
@@ -472,10 +469,6 @@ namespace
         fields.startingSpells = addInput(*formFrame, "startingSpells", 256,
             { 0, 310, formWidth - 8, 24 }, "Comma-separated spell IDs.");
 
-        addLabel(*formFrame, "startingItemsLabel", "Starting item IDs", { 0, 340, 250, 20 });
-        fields.startingItems = addInput(*formFrame, "startingItems", 256,
-            { 0, 360, formWidth - 8, 24 }, "Comma-separated item IDs.");
-
         fields.status = formFrame->addField("editorStatus", 256);
         fields.status->setText("Ready.");
         fields.status->setSize({ 0, 400, formWidth - 8, 30 });
@@ -530,7 +523,6 @@ namespace
         setFieldText(fields.allowedRaces, "");
         setFieldText(fields.proficiencies, "");
         setFieldText(fields.startingSpells, "");
-        setFieldText(fields.startingItems, "");
         if ( fields.id )
         {
             fields.id->setEditable(true);
@@ -583,7 +575,7 @@ namespace
         if ( !parseIntegerList(fieldText(fields.allowedRaces), customClass.allowedRaces)
             || !parseIntegerList(fieldText(fields.proficiencies), customClass.proficiencies)
             || !parseIntegerList(fieldText(fields.startingSpells), customClass.startingSpells)
-            || !parseIntegerList(fieldText(fields.startingItems), customClass.startingItems) )
+ )
         {
             setStatus("List fields must contain comma-separated integers.");
             return;
