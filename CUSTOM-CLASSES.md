@@ -29,9 +29,9 @@ no greater than 127, so the current valid custom ID range is 0–101.
       "INT": 2,
       "PER": 1,
       "CHR": 1,
-      "proficiencies": [12, 25, 18, 15],
-      "starting_spells": [4],
-      "starting_items": [0]
+      "proficiencies": [],
+      "starting_spells": [],
+      "starting_items": []
     }
   ]
 }
