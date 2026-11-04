@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#include "custom_classes.hpp"
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -880,6 +881,11 @@ static void demo_play(const char* filename) {
     demo_file->read(&stats[clientnum]->sex, sizeof(Stat::sex), 1);
     demo_file->read(&stats[clientnum]->stat_appearance, sizeof(Stat::stat_appearance), 1);
     demo_file->read(&client_classes[clientnum], sizeof(client_classes[clientnum]), 1);
+    if (client_classes[clientnum] < 0
+        || (client_classes[clientnum] >= NUMCLASSES
+            && !CustomClassManager::isCustomClassId(client_classes[clientnum]))) {
+        client_classes[clientnum] = CLASS_BARBARIAN;
+    }
 
     // read player name
     Uint32 name_len;
