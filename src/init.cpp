@@ -10,7 +10,9 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#ifndef EDITOR
 #include "custom_classes.hpp"
+#endif
 
 #include <memory>
 #include <ctime>
@@ -233,8 +235,10 @@ int initApp(char const * const title, int fullscreen)
         return 13;
     }
 
+#ifndef EDITOR
     // Classes must be available in character creation, before initGameDatafiles().
     CustomClassManager::init();
+#endif
 
 	// load default language file (english)
 	Language::languageCode = "en";
