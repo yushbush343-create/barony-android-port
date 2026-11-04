@@ -11,6 +11,7 @@
 
 #include "main.hpp"
 #include "custom_classes.hpp"
+#include "custom_class_editor.hpp"
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -48,6 +49,7 @@
 #include "ui/MainMenu.hpp"
 #include <limits>
 #include "ui/Frame.hpp"
+#include "ui/Button.hpp"
 #include "ui/Field.hpp"
 #include "input.hpp"
 #include "ui/Image.hpp"
@@ -62,6 +64,36 @@
 #include <atomic>
 #include <future>
 #include <thread>
+
+namespace
+{
+    void openCustomClassEditorButton(Button&)
+    {
+        CustomClassEditor::open();
+    }
+
+    void ensureCustomClassEditorButton()
+    {
+        if ( !MainMenu::main_menu_frame
+            || MainMenu::main_menu_frame->findButton("customClassEditorLauncher") )
+        {
+            return;
+        }
+
+        Button* button = MainMenu::main_menu_frame->addButton("customClassEditorLauncher");
+        button->setText("Custom Class Editor");
+        button->setSize({ std::max(8, Frame::virtualScreenX - 218),
+            std::max(8, Frame::virtualScreenY - 48), 206, 32 });
+        button->setColor(makeColor(38, 52, 70, 245));
+        button->setHighlightColor(makeColor(68, 94, 128, 255));
+        button->setTextColor(makeColor(238, 244, 250, 255));
+        button->setTextHighlightColor(makeColor(255, 255, 255, 255));
+        button->setBorderColor(makeColor(130, 151, 177, 255));
+        button->setBorder(1);
+        button->setTooltip("Create, edit, and save custom character classes.");
+        button->setCallback(openCustomClassEditorButton);
+    }
+}
 
 #ifdef LINUX
 //Sigsegv catching stuff.
@@ -7755,7 +7787,12 @@ int main(int argc, char** argv)
 							}
 						}
 
-						MainMenu::doMainMenu(!intro);
+						if ( !CustomClassEditor::draw() )
+						{
+							MainMenu::doMainMenu(!intro);
+							ensureCustomClassEditorButton();
+							CustomClassEditor::draw();
+						}
 #ifdef ANDROID
 						static bool androidMainMenuLogged = false;
 						if (!androidMainMenuLogged && MainMenu::main_menu_frame
@@ -8100,7 +8137,12 @@ int main(int argc, char** argv)
 
 				if ( gamePaused )
 				{
-					MainMenu::doMainMenu(!intro);
+					if ( !CustomClassEditor::draw() )
+					{
+						MainMenu::doMainMenu(!intro);
+						ensureCustomClassEditorButton();
+						CustomClassEditor::draw();
+					}
 				}
 				else
 				{
