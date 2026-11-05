@@ -8138,7 +8138,12 @@ int main(int argc, char** argv)
 
 				if ( gamePaused )
 				{
-					MainMenu::doMainMenu(!intro);
+					// The editor is drawn earlier in the menu frame. Do not draw the
+					// main menu over it a second time while it is active.
+					if ( !CustomClassEditor::isOpen() )
+					{
+						MainMenu::doMainMenu(!intro);
+					}
 				}
 				else
 				{
