@@ -40,6 +40,7 @@ public:
     static const std::vector<CustomClass>& getClasses();
 
     // Custom class IDs occupy NUMCLASSES + [0, 127 - NUMCLASSES].
+    static int getMaxCustomClassId();
     static bool isCustomClassId(int classId);
     static int getCustomClassIndex(int classId);
     static const CustomClass* getClass(int classId);
