@@ -219,7 +219,7 @@ namespace
     int nextAvailableId()
     {
         const auto& classes = CustomClassManager::getClasses();
-        for ( int id = 0; id <= 127 - NUMCLASSES; ++id )
+        for ( int id = 0; id <= CustomClassManager::getMaxCustomClassId(); ++id )
         {
             const bool used = std::any_of(classes.begin(), classes.end(),
                 [id](const CustomClass& customClass) { return customClass.id == id; });
@@ -271,12 +271,7 @@ namespace
         setFieldText(fields.per, std::to_string(customClass->PER));
         setFieldText(fields.chr, std::to_string(customClass->CHR));
 
-        std::vector<int> races = customClass->allowedRaces;
-        if ( races.size() == 1 && races.front() == RACE_HUMAN )
-        {
-            races.clear();
-        }
-        setFieldText(fields.allowedRaces, integerListToString(races));
+        setFieldText(fields.allowedRaces, integerListToString(customClass->allowedRaces));
         setFieldText(fields.proficiencies, integerListToString(customClass->proficiencies));
         setFieldText(fields.startingSpells, integerListToString(customClass->startingSpells));
         if ( fields.id )
@@ -589,11 +584,6 @@ namespace
         }
 
         selectedCustomId = customClass.id;
-        if ( client_classes[0] == NUMCLASSES + customClass.id && stats && stats[0] )
-        {
-            stats[0]->clearStats();
-            initClass(0);
-        }
         refreshClassList();
         populateFields();
         setStatus("Saved. Changes are stored in app data.");
@@ -612,13 +602,6 @@ namespace
         {
             setStatus("Delete failed.");
             return;
-        }
-
-        if ( client_classes[0] == NUMCLASSES + deletedId && stats && stats[0] )
-        {
-            client_classes[0] = CLASS_BARBARIAN;
-            stats[0]->clearStats();
-            initClass(0);
         }
 
         selectedCustomId = -1;
