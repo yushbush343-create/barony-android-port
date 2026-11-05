@@ -18310,7 +18310,7 @@ static const char* classButtonName(int classId)
                         const CustomClass* customClass = CustomClassManager::getClass(classId);
                         if ( customClass )
                         {
-                                field.setText(customClass->displayName);
+                                field.setText(customClass->displayName.c_str());
                         }
                         else
                         {
