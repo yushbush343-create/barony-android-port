@@ -13759,23 +13759,23 @@ static const char* classButtonName(int classId)
 	constexpr Uint32 color_pro = makeColorRGB(88, 203, 255);
 	constexpr Uint32 color_con = makeColorRGB(255, 56, 56);
 	constexpr Uint32 color_energy = makeColorRGB(21, 255, 0);
-	constexpr Uint32 color_heat = makeColorRGB(241, 129, 78);\1
-                std::vector<const char*> result;
-                const auto& customClasses = CustomClassManager::getClasses();
-                result.reserve(num_classes + customClasses.size());
+	constexpr Uint32 color_heat = makeColorRGB(241, 129, 78);
 
-                for (int c = CLASS_BARBARIAN; c <= CLASS_PALADIN; ++c) {
-                        if (isCharacterValidFromDLC(*stats[index], c) == VALID_OK_CHARACTER) {
-                                result.emplace_back(classes_in_order[c]);
-                        }
-                }
+	std::vector<const char*> reducedClassList(int index) {
+		std::vector<const char*> result;
+		const auto& customClasses = CustomClassManager::getClasses();
+		result.reserve(num_classes + customClasses.size());
 
-                for (const auto& customClass : customClasses) {
-                        result.emplace_back(customClass.internalName.c_str());
-                }
-
-                return result;\2
+		for (int c = CLASS_BARBARIAN; c <= CLASS_PALADIN; ++c) {
+			if (isCharacterValidFromDLC(*stats[index], c) == VALID_OK_CHARACTER) {
+				result.emplace_back(classes_in_order[c]);
+			}
 		}
+
+		for (const auto& customClass : customClasses) {
+			result.emplace_back(customClass.internalName.c_str());
+		}
+
 		return result;
 	}
 
@@ -18310,7 +18310,7 @@ static const char* classButtonName(int classId)
                         const CustomClass* customClass = CustomClassManager::getClass(classId);
                         if ( customClass )
                         {
-                                field.setText(customClass->displayName);
+                                field.setText(customClass->displayName.c_str());
                         }
                         else
                         {

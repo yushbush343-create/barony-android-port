@@ -128,6 +128,7 @@ try {
         [string[]]$ExpectedAssets = @()
         if ($Variant -eq 'Game') {
             $ExpectedAssets = @(
+                'assets/custom/classes.json',
                 'assets/licenses/Barony-and-bundled-components.txt',
                 'assets/licenses/FreeType.txt',
                 'assets/licenses/OpenAL-Soft.txt',

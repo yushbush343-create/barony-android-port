@@ -11,6 +11,8 @@
 
 #include "main.hpp"
 #include <list>
+#include <algorithm>
+#include <iterator>
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -18,6 +20,7 @@
 #include "entity.hpp"
 #include "files.hpp"
 #include "menu.hpp"
+#include "custom_classes.hpp"
 #include "classdescriptions.hpp"
 #include "interface/interface.hpp"
 #include "magic/magic.hpp"
@@ -56,6 +59,29 @@
 #include "ui/MainMenu.hpp"
 #include "ui/Image.hpp"
 
+static const char* playerClassDisplayName(int classId, int player)
+{
+    const CustomClass* customClass = CustomClassManager::getClass(classId);
+    if (customClass)
+    {
+        return customClass->displayName.c_str();
+    }
+    return playerClassLangEntry(classId, player);
+}
+
+static const char* playerClassDescriptionText(int classId, int player)
+{
+    const CustomClass* customClass = CustomClassManager::getClass(classId);
+    if (customClass)
+    {
+        return customClass->description.empty()
+            ? customClass->displayName.c_str()
+            : customClass->description.c_str();
+    }
+    return playerClassLangEntry(classId, player);
+}
+
+
 #ifdef STEAMWORKS
 //Helper func. //TODO: Bugger.
 void* cpp_SteamMatchmaking_GetLobbyOwner(void* steamIDLobby)
@@ -81,6 +107,8 @@ bool lobby_window = false;
 bool settings_window = false;
 int connect_window = 0;
 int charcreation_step = 0;
+int charcreationClassListScroll = 0;
+int charcreationPreviousClassForScroll = -1;
 int loadGameSaveShowRectangle = 0; // stores the current amount of savegames available, to use when drawing load game window boxes.
 int singleplayerSavegameFreeSlot = -1; // used on multiplayer/single player select window to store if savefile exists. 
 int multiplayerSavegameFreeSlot = -1; // used on multiplayer/single player select window to store if savefile exists.
@@ -602,6 +630,16 @@ int isCharacterValidFromDLC(Stat& myStats, int characterClass)
 			break;
 		default:
 			break;
+	}
+
+	if ( const CustomClass* customClass = CustomClassManager::getClass(characterClass) )
+	{
+		if ( std::find(customClass->allowedRaces.begin(), customClass->allowedRaces.end(),
+			myStats.playerRace) != customClass->allowedRaces.end() )
+		{
+			return VALID_OK_CHARACTER;
+		}
+		return INVALID_CHARACTER;
 	}
 
 	if ( myStats.playerRace == RACE_HUMAN )
@@ -2034,7 +2072,7 @@ static void handleMainMenu(bool mode)
 										stats[0]->sex = lastSex;
 									}
 									// convert human class to monster special classes on reselect.
-									if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+									if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 										&& stats[0]->appearance == 0 )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2044,7 +2082,7 @@ static void handleMainMenu(bool mode)
 										stats[0]->clearStats();
 										initClass(0);
 									}
-									else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK
+									else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 										&& lastAppearance == 0 )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2183,7 +2221,7 @@ static void handleMainMenu(bool mode)
 								{
 									stats[0]->appearance = 0; // use racial passives
 									// convert human class to monster special classes on reselect.
-									if ( client_classes[0] > CLASS_MONK )
+									if ( client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 									{
 										if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 										{
@@ -2256,7 +2294,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->sex = lastSex;
 					}
 					// convert human class to monster special classes on reselect.
-					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& stats[0]->appearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2266,7 +2304,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->clearStats();
 						initClass(0);
 					}
-					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK
+					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& lastAppearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2310,7 +2348,7 @@ static void handleMainMenu(bool mode)
 					{
 						stats[0]->appearance = 0;
 						// convert human class to monster special classes on reselect.
-						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK )
+						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 						{
 							if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 							{
@@ -2395,7 +2433,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->sex = lastSex;
 					}
 					// convert human class to monster special classes on reselect.
-					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK
+					if ( stats[0]->playerRace != RACE_HUMAN && lastRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES
 						&& stats[0]->appearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2405,7 +2443,7 @@ static void handleMainMenu(bool mode)
 						stats[0]->clearStats();
 						initClass(0);
 					}
-					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK 
+					else if ( stats[0]->playerRace != RACE_HUMAN && lastRace == RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES 
 						&& lastAppearance == 0 )
 					{
 						if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
@@ -2449,7 +2487,7 @@ static void handleMainMenu(bool mode)
 					{
 						stats[0]->appearance = 0;
 						// convert human class to monster special classes on reselect.
-						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK )
+						if ( stats[0]->playerRace != RACE_HUMAN && client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 						{
 							if ( isCharacterValidFromDLC(*stats[0], client_classes[0]) != VALID_OK_CHARACTER )
 							{
@@ -2552,17 +2590,109 @@ static void handleMainMenu(bool mode)
 				}
 			}
 
+			int customClassesDisplayed = 0;
+			for ( const CustomClass& customClass : CustomClassManager::getClasses() )
+			{
+				const bool raceAllowed = std::find(customClass.allowedRaces.begin(),
+					customClass.allowedRaces.end(), stats[0]->playerRace) != customClass.allowedRaces.end();
+				if ( !raceAllowed )
+				{
+					continue;
+				}
+				const int customClassId = NUMCLASSES + customClass.id;
+				if ( isCharacterValidFromDLC(*stats[0], customClassId) == VALID_OK_CHARACTER )
+				{
+					availableClasses.insert(customClassId);
+					displayedClasses.push_back(customClassId);
+					++customClassesDisplayed;
+				}
+			}
+			entriesToDisplay += customClassesDisplayed;
+
 			for ( auto it = lockedClasses.begin(); it != lockedClasses.end(); ++it )
 			{
 				displayedClasses.push_back(*it);
 			}
+			// The list can differ from the nominal built-in class count when DLC
+			// restrictions or custom race restrictions remove entries. Use its
+			// actual size for scrolling and indexed access.
+			entriesToDisplay = static_cast<int>(displayedClasses.size());
+
+			const int classListTop = suby1 + 56;
+			const int classListVisibleRows = 23;
+			const int classListMaxScroll = std::max(0, entriesToDisplay - classListVisibleRows);
+			charcreationClassListScroll = std::max(0, std::min(charcreationClassListScroll, classListMaxScroll));
+
+			if ( charcreationPreviousClassForScroll != client_classes[0] )
+			{
+				auto selectedClass = std::find(displayedClasses.begin(),
+					displayedClasses.begin() + entriesToDisplay, client_classes[0]);
+				if ( selectedClass != displayedClasses.begin() + entriesToDisplay )
+				{
+					const int selectedIndex = static_cast<int>(std::distance(displayedClasses.begin(), selectedClass));
+					if ( selectedIndex < charcreationClassListScroll )
+					{
+						charcreationClassListScroll = selectedIndex;
+					}
+					else if ( selectedIndex >= charcreationClassListScroll + classListVisibleRows )
+					{
+						charcreationClassListScroll = selectedIndex - classListVisibleRows + 1;
+					}
+				}
+				else
+				{
+					charcreationClassListScroll = 0;
+				}
+				charcreationPreviousClassForScroll = client_classes[0];
+			}
+
+			const int scrollButtonX = subx1 + 340;
+			const int scrollButtonTop = classListTop;
+			const int scrollButtonBottom = classListTop + 16 * (classListVisibleRows - 1);
+			if ( keystatus[SDLK_PAGEUP] )
+			{
+				keystatus[SDLK_PAGEUP] = 0;
+				charcreationClassListScroll = std::max(0, charcreationClassListScroll - classListVisibleRows);
+			}
+			if ( keystatus[SDLK_PAGEDOWN] )
+			{
+				keystatus[SDLK_PAGEDOWN] = 0;
+				charcreationClassListScroll = std::min(classListMaxScroll,
+					charcreationClassListScroll + classListVisibleRows);
+			}
+			if ( inputs.bMouseLeft(clientnum) )
+			{
+				if ( charcreationClassListScroll > 0
+					&& mouseInBounds(clientnum, scrollButtonX, scrollButtonX + 24, scrollButtonTop, scrollButtonTop + 16) )
+				{
+					inputs.mouseClearLeft(clientnum);
+					--charcreationClassListScroll;
+				}
+				else if ( charcreationClassListScroll < classListMaxScroll
+					&& mouseInBounds(clientnum, scrollButtonX, scrollButtonX + 24, scrollButtonBottom, scrollButtonBottom + 16) )
+				{
+					inputs.mouseClearLeft(clientnum);
+					++charcreationClassListScroll;
+				}
+			}
+			if ( charcreationClassListScroll > 0 )
+			{
+				drawDepressed(scrollButtonX, scrollButtonTop, scrollButtonX + 24, scrollButtonTop + 16);
+				ttfPrintText(ttf12, scrollButtonX + 8, scrollButtonTop + 2, "^");
+			}
+			if ( charcreationClassListScroll < classListMaxScroll )
+			{
+				drawDepressed(scrollButtonX, scrollButtonBottom, scrollButtonX + 24, scrollButtonBottom + 16);
+				ttfPrintText(ttf12, scrollButtonX + 8, scrollButtonBottom + 2, "v");
+			}
 
 			int drawLockedTooltip = 0;
 			SDL_Rect tooltip;
-			for ( c = 0; c < entriesToDisplay; c++ )
+			for ( c = charcreationClassListScroll;
+				c < entriesToDisplay && c < charcreationClassListScroll + classListVisibleRows; c++ )
 			{
 				int classToPick = displayedClasses.at(c);
-				int pady = suby1 + 56 + 16 * c;
+				int pady = classListTop + 16 * (c - charcreationClassListScroll);
 				if ( lockedClasses.find(classToPick) != lockedClasses.end() )
 				{
 					pady += 8;
@@ -2594,7 +2724,7 @@ static void handleMainMenu(bool mode)
 
 				if ( classToPick == client_classes[0] )
 				{
-					ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[o] %s", playerClassLangEntry(classToPick, 0));
+					ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[o] %s", playerClassDisplayName(classToPick, 0));
 				}
 				else
 				{
@@ -2607,7 +2737,7 @@ static void handleMainMenu(bool mode)
 						img.w = 22;
 						img.h = 20;
 						drawImageScaled(sidebar_unlock_bmp, nullptr, &img);
-						ttfPrintTextFormattedColor(ttf16, subx1 + 32, pady, uint32ColorGray, "[ ] %s", playerClassLangEntry(classToPick, 0));
+						ttfPrintTextFormattedColor(ttf16, subx1 + 32, pady, uint32ColorGray, "[ ] %s", playerClassDisplayName(classToPick, 0));
 
 						if ( mouseInBounds(clientnum, subx1 + 40, subx1 + 72, pady, pady + 16) )
 						{
@@ -2626,7 +2756,7 @@ static void handleMainMenu(bool mode)
 					}
 					else
 					{
-						ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[ ] %s", playerClassLangEntry(classToPick, 0));
+						ttfPrintTextFormatted(ttf16, subx1 + 32, pady, "[ ] %s", playerClassDisplayName(classToPick, 0));
 					}
 				}
 
@@ -2702,7 +2832,7 @@ static void handleMainMenu(bool mode)
 			}
 
 			// class description
-			ttfPrintText(ttf12, subx1 + 8, suby2 - 80, playerClassDescription(client_classes[0], 0));
+			ttfPrintText(ttf12, subx1 + 8, suby2 - 80, playerClassDescriptionText(client_classes[0], 0));
 
 			if ( drawLockedTooltip > 0 )
 			{
@@ -4718,7 +4848,7 @@ static void handleMainMenu(bool mode)
 			{
 				raceAndClass += "(aesthetic) ";
 			}
-			raceAndClass += playerClassLangEntry(client_classes[c], c);
+			raceAndClass += playerClassDisplayName(client_classes[c], c);
 
 			if ( charDisplayName.size() > 39 )
 			{
@@ -5890,7 +6020,7 @@ static void handleMainMenu(bool mode)
 				ttfPrintTextFormatted(ttf16, subx1 + 448, suby1 + 56, "%s", stats[clientnum]->name);
 
 				char classname[64];
-				strcpy(classname, playerClassLangEntry(client_classes[0], clientnum));
+				strcpy(classname, playerClassDisplayName(client_classes[0], clientnum));
 				classname[0] -= 32;
 				int creature = HUMAN;
 				if ( players[clientnum] && players[clientnum]->entity )
@@ -5931,7 +6061,7 @@ static void handleMainMenu(bool mode)
 			}
 
 			// print character stats
-			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 128, Language::get(359), stats[clientnum]->LVL, playerClassLangEntry(client_classes[clientnum], clientnum));
+			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 128, Language::get(359), stats[clientnum]->LVL, playerClassDisplayName(client_classes[clientnum], clientnum));
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 140, Language::get(1396), stats[clientnum]->EXP);
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 152, Language::get(1397), stats[clientnum]->GOLD);
 			ttfPrintTextFormatted(ttf12, subx1 + 456, suby1 + 164, Language::get(361), currentlevel);
@@ -9485,7 +9615,10 @@ void doNewGame(bool makeHighscore) {
 	}
 
 	// spice of life achievement
-	usedClass[client_classes[clientnum]] = true;
+	if ( client_classes[clientnum] >= 0 && client_classes[clientnum] < NUMCLASSES )
+	{
+		usedClass[client_classes[clientnum]] = true;
+	}
 	bool usedAllClasses = true;
 	for ( int c = 0; c <= CLASS_MONK; c++ )
 	{
@@ -11582,6 +11715,8 @@ void buttonOpenCharacterCreationWindow(button_t* my)
 
 	// create character creation window
 	charcreation_step = 1;
+	charcreationClassListScroll = 0;
+	charcreationPreviousClassForScroll = -1;
 	raceSelect = 0;
 	camera_charsheet_offsetyaw = (330) * PI / 180;
 	subwindow = 1;
@@ -11744,7 +11879,7 @@ void buttonRandomCharacter(button_t* my)
 	//	else
 	//	{
 	//		client_classes[0] = local_rng.rand() % (CLASS_MONK + 2);
-	//		if ( client_classes[0] > CLASS_MONK )
+	//		if ( client_classes[0] > CLASS_MONK && client_classes[0] < NUMCLASSES )
 	//		{
 	//			client_classes[0] = CLASS_MONK + stats[0]->playerRace; // monster specific classes.
 	//		}
@@ -11802,7 +11937,18 @@ bool replayLastCharacter(const int index, int multiplayer)
 		stats[index]->sex = static_cast<sex_t>(std::min(lastSex, (int)sex_t::FEMALE));
 		stats[index]->playerRace = std::min(std::max(static_cast<int>(RACE_HUMAN), lastRace), static_cast<int>(RACE_ENUM_END - 1));
 		stats[index]->stat_appearance = lastAppearance;
-		client_classes[index] = std::min(std::max(0, lastClass), static_cast<int>(NUMCLASSES - 1));
+		if ( lastClass < NUMCLASSES )
+		{
+			client_classes[index] = std::min(std::max(0, lastClass), static_cast<int>(NUMCLASSES - 1));
+		}
+		else if ( CustomClassManager::isCustomClassId(lastClass) )
+		{
+			client_classes[index] = lastClass;
+		}
+		else
+		{
+			client_classes[index] = CLASS_BARBARIAN;
+		}
 
 		switch ( isCharacterValidFromDLC(*stats[index], lastClass) )
 		{

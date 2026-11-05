@@ -10,6 +10,9 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#ifndef EDITOR
+#include "custom_classes.hpp"
+#endif
 
 #include <memory>
 #include <ctime>
@@ -116,6 +119,21 @@ bool mountBaseDataFolders() {
 				return false;
 			}
 #endif // !NINTENDO
+
+            // The PhysicsFS write directory is not automatically part of its
+            // read search path. Mount the writable custom-data folder at the
+            // virtual root so custom/classes.json can be reloaded next launch.
+            if ( PHYSFS_getWriteDir() )
+            {
+                PHYSFS_mkdir("custom");
+                std::string customDataPath = PHYSFS_getWriteDir();
+                customDataPath.append(PHYSFS_getDirSeparator()).append("custom");
+                if ( !PHYSFS_mount(customDataPath.c_str(), NULL, 0) )
+                {
+                    printlog("[PhysFS]: Could not mount writable custom data folder %s: %s",
+                        customDataPath.c_str(), PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+                }
+            }
 		}
 	}
 	else
@@ -231,6 +249,11 @@ int initApp(char const * const title, int fullscreen)
     if (!mountBaseDataFolders()) {
         return 13;
     }
+
+#ifndef EDITOR
+    // Classes must be available in character creation, before initGameDatafiles().
+    CustomClassManager::init();
+#endif
 
 	// load default language file (english)
 	Language::languageCode = "en";

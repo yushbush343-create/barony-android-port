@@ -1,5 +1,6 @@
 list(APPEND GAME_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/custom_classes.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/custom_class_editor.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/android_data_bridge.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/android_dlc_bridge.cpp"
@@ -107,7 +108,6 @@ list(APPEND GAME_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/mod_tools.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/json.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/eos.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/mod_tools.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/lobbies.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/shader.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/playfab.cpp"

@@ -761,34 +761,15 @@ void initClass(const int player)
 	players[player]->magic.spellList.last = nullptr;
 
 
-	// CLASS LOADOUTS
-	// CUSTOM CLASS LOADOUTS
+	// CUSTOM CLASS STAT MODIFIERS
 	if ( CustomClassManager::isCustomClassId(client_classes[player]) )
 	{
 		const CustomClass* customClass = CustomClassManager::getClass(client_classes[player]);
-
-		if ( !isLocalPlayer && multiplayer == CLIENT && intro == false )
-		{
-			// Don't create starting items for remote players we don't own.
-			return;
-		}
 
 		if ( customClass )
 		{
 			initClassStats(client_classes[player], stats[player]);
 
-			if ( isLocalPlayer )
-			{
-				for ( const int itemType : customClass->startingItems )
-				{
-					if ( itemType >= 0 && itemType < NUMITEMS )
-					{
-						item = newItem(static_cast<ItemType>(itemType), SERVICABLE, 0, 1, 0, true, nullptr);
-						item2 = itemPickup(player, item);
-						free(item);
-					}
-				}
-			}
 		}
 	}
 	// barbarian
@@ -3455,7 +3436,7 @@ void initClass(const int player)
 	}
 
 	if ( stats[player]->stat_appearance == 0 
-		&& client_classes[player] <= CLASS_MONK 
+		&& (client_classes[player] <= CLASS_MONK || CustomClassManager::isCustomClassId(client_classes[player])) 
 		&& stats[player]->playerRace != RACE_HUMAN )
 	{
 		if ( isLocalPlayer )

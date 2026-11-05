@@ -10,6 +10,7 @@
 -------------------------------------------------------------------------------*/
 
 #include "main.hpp"
+#include "custom_classes.hpp"
 #include "draw.hpp"
 #include "game.hpp"
 #include "stat.hpp"
@@ -1611,7 +1612,10 @@ NetworkingLobbyJoinRequestResult lobbyPlayerJoinRequest(int& outResult, bool loc
 		// on success, client gets legit player number
 		client_disconnected[c] = false;
         stringCopy(stats[c]->name, (const char*)net_packet->data + 4, sizeof(Stat::name), 32);
-		client_classes[c] = (int)SDLNet_Read32(&net_packet->data[36]);
+		const int receivedClass = (int)SDLNet_Read32(&net_packet->data[36]);
+		client_classes[c] = (receivedClass >= 0 && receivedClass < NUMCLASSES)
+			|| CustomClassManager::isCustomClassId(receivedClass)
+			? receivedClass : CLASS_BARBARIAN;
 		stats[c]->sex = static_cast<sex_t>((int)SDLNet_Read32(&net_packet->data[40]));
 		Uint32 raceAndAppearance = (Uint32)SDLNet_Read32(&net_packet->data[44]);
 		stats[c]->stat_appearance = (raceAndAppearance & 0xFF00) >> 8;
@@ -6263,7 +6267,9 @@ static std::unordered_map<Uint32, void(*)()> clientPacketHandlers = {
 		int classnum = net_packet->data[5];
 		if ( player >= 0 && player < MAXPLAYERS )
 		{
-			client_classes[player] = classnum;
+			client_classes[player] = (classnum >= 0 && classnum < NUMCLASSES)
+				|| CustomClassManager::isCustomClassId(classnum)
+				? classnum : CLASS_BARBARIAN;
 			bool oldIntro = intro;
 			intro = true;
 			initClass(player);
@@ -6507,7 +6513,11 @@ static std::unordered_map<Uint32, void(*)()> clientPacketHandlers = {
 		}
 		racename += getMonsterLocalizedName(getMonsterFromPlayerRace(gui.savedRace)).c_str();
 		camelCaseString(racename);
-		std::string classname = playerClassLangEntry(gui.savedClass >= 0 ? gui.savedClass : client_classes[player], player);
+		const int displayClassId = gui.savedClass >= 0 ? gui.savedClass : client_classes[player];
+		const CustomClass* customClass = CustomClassManager::getClass(displayClassId);
+		std::string classname = customClass ? customClass->displayName
+			: (displayClassId >= 0 && displayClassId < NUMCLASSES
+				? playerClassLangEntry(displayClassId, player) : "Unknown Class");
 		camelCaseString(classname);
 		if ( player == clientnum )
 		{
@@ -9221,7 +9231,11 @@ static std::unordered_map<Uint32, void(*)()> serverPacketHandlers = {
 			}
 			racename += getMonsterLocalizedName(getMonsterFromPlayerRace(gui.savedRace)).c_str();
 			camelCaseString(racename);
-			std::string classname = playerClassLangEntry(gui.savedClass >= 0 ? gui.savedClass : client_classes[player], player);
+			const int displayClassId = gui.savedClass >= 0 ? gui.savedClass : client_classes[player];
+		const CustomClass* customClass = CustomClassManager::getClass(displayClassId);
+		std::string classname = customClass ? customClass->displayName
+			: (displayClassId >= 0 && displayClassId < NUMCLASSES
+				? playerClassLangEntry(displayClassId, player) : "Unknown Class");
 			camelCaseString(classname);
 
 			for ( int i = 0; i < MAXPLAYERS; ++i )

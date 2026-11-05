@@ -82,6 +82,18 @@ After you start a modded game, the game remembers those mods: the next time
 you open **Play Modded Game**, they're already loaded. Leaving the mod menu
 with **Back** unloads them.
 
+## Custom classes in this fork
+
+This fork includes 15 additional character classes and an in-game **Custom
+Class Editor** from the title menu. The editor saves definitions to
+the writable app-data path `mods/custom/classes.json`.
+
+The editor currently manages the app's writable class definitions. Loading
+class definitions directly from individual mod archives has not yet been
+verified. See the
+[custom class format, editor instructions, and limitations](CUSTOM-CLASSES.md)
+before assigning class IDs or distributing saves that use those classes.
+
 ## Translations
 
 Community translations are mods. Subscribe to one in the Steam Workshop, pack

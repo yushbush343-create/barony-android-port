@@ -18,6 +18,7 @@ See LICENSE for details.
 #include "ui/Field.hpp"
 #include "ui/Image.hpp"
 #ifndef EDITOR
+#include "custom_classes.hpp"
 #include "ui/MainMenu.hpp"
 #include "shops.hpp"
 #include "interface/ui.hpp"
@@ -9623,6 +9624,13 @@ void ClassHotbarConfig_t::writeToFile(HotbarConfigType fileWriteType, HotbarConf
 	bool writeNewFile = true;
 	if ( fileWriteType == HOTBAR_LAYOUT_CUSTOM_CONFIG )
 	{
+#ifndef EDITOR
+		if ( client_classes[clientnum] < 0 || client_classes[clientnum] >= NUMCLASSES )
+		{
+			printlog("[Class Hotbar]: Custom class hotbar layouts are not supported yet.");
+			return;
+		}
+#endif
 		File* fp = FileIO::open(outputPath.c_str(), "rb");
 		if ( !fp )
 		{
@@ -10023,10 +10031,20 @@ void ClassHotbarConfig_t::init()
 void ClassHotbarConfig_t::assignHotbarSlots(const int player)
 {
 	int classnum = client_classes[player];
+	auto& hotbar_t = players[player]->hotbar;
+#ifndef EDITOR
+	if ( classnum < 0 || classnum >= NUMCLASSES )
+	{
+		for ( int i = 0; i < NUM_HOTBAR_SLOTS; ++i )
+		{
+			hotbar_t.slots()[i].item = 0;
+			hotbar_t.slots()[i].resetLastItem();
+		}
+		return;
+	}
+#endif
 	auto& layoutDefault = players[player]->hotbar.useHotbarFaceMenu ? ClassHotbarsDefault[classnum].layoutModern : ClassHotbarsDefault[classnum].layoutClassic;
 	auto& layoutCustom = players[player]->hotbar.useHotbarFaceMenu ? ClassHotbars[classnum].layoutModern : ClassHotbars[classnum].layoutClassic;
-
-	auto& hotbar_t = players[player]->hotbar;
 	for ( int i = 0; i < NUM_HOTBAR_SLOTS; ++i )
 	{
 		hotbar_t.slots()[i].item = 0;
@@ -15652,7 +15670,24 @@ std::string Compendium_t::Events_t::formatEventRecordText(Sint32 value, const ch
 					}
 					else if ( !strcmp(formatType, "class") )
 					{
-						std::string tmp = playerClassLangEntry(formatVal, 0);
+						std::string tmp;
+#ifndef EDITOR
+						const CustomClass* customClass = CustomClassManager::getClass(formatVal);
+						if ( customClass )
+						{
+							tmp = customClass->displayName;
+						}
+						else if ( formatVal >= 0 && formatVal < NUMCLASSES )
+						{
+							tmp = playerClassLangEntry(formatVal, 0);
+						}
+						else
+						{
+							tmp = "Unknown Class";
+						}
+#else
+						tmp = playerClassLangEntry(formatVal, 0);
+#endif
 						camelCaseString(tmp);
 						output += tmp;
 					}
