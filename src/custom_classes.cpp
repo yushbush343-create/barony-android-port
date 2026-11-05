@@ -509,6 +509,11 @@ const std::vector<CustomClass>& CustomClassManager::getClasses()
     return classes;
 }
 
+int CustomClassManager::getMaxCustomClassId()
+{
+    return MAX_CUSTOM_CLASS_ID;
+}
+
 bool CustomClassManager::isCustomClassId(int classId)
 {
     return getCustomClassIndex(classId) >= 0;
