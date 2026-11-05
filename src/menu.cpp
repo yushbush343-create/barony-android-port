@@ -78,7 +78,7 @@ static const char* playerClassDescriptionText(int classId, int player)
             ? customClass->displayName.c_str()
             : customClass->description.c_str();
     }
-    return playerClassDescription(classId, player);
+    return playerClassLangEntry(classId, player);
 }
 
 
