@@ -642,6 +642,11 @@ namespace
     }
 }
 
+bool isOpen()
+{
+    return editorOpen;
+}
+
 void open()
 {
     if ( editorOpen )
